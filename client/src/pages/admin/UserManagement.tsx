@@ -6,8 +6,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { Users, UserPlus, RotateCcw } from 'lucide-react';
+import { Users, UserPlus, RotateCcw, Loader2 } from 'lucide-react';
 import { apiRequest, queryClient } from '@/lib/queryClient';
+import { EmptyState } from '@/components/EmptyState';
 import type { User } from '@shared/schema';
 
 export function UserManagement() {
@@ -191,9 +192,7 @@ export function UserManagement() {
                   </tbody>
                 </table>
                 {users.length === 0 && (
-                  <div className="text-center py-8 text-muted-foreground">
-                    No users registered yet
-                  </div>
+                  <EmptyState title="No users registered" description="Register new users to see them listed here" />
                 )}
               </div>
             </CardContent>
@@ -291,7 +290,8 @@ function StudentRegistrationForm({ onSubmit, isLoading }: { onSubmit: (data: any
         />
       </div>
 
-      <Button type="submit" disabled={isLoading} className="w-full" data-testid="button-register-student">
+      <Button type="submit" disabled={isLoading} className="w-full gap-2" data-testid="button-register-student">
+        {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
         {isLoading ? 'Registering...' : 'Register Student'}
       </Button>
     </form>
@@ -353,7 +353,8 @@ function ManagerRegistrationForm({ onSubmit, isLoading }: { onSubmit: (data: any
         />
       </div>
 
-      <Button type="submit" disabled={isLoading} className="w-full" data-testid="button-register-manager">
+      <Button type="submit" disabled={isLoading} className="w-full gap-2" data-testid="button-register-manager">
+        {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
         {isLoading ? 'Registering...' : 'Register Seating Manager'}
       </Button>
     </form>
@@ -429,7 +430,8 @@ function CoordinatorRegistrationForm({ onSubmit, isLoading }: { onSubmit: (data:
         />
       </div>
 
-      <Button type="submit" disabled={isLoading} className="w-full" data-testid="button-register-coordinator">
+      <Button type="submit" disabled={isLoading} className="w-full gap-2" data-testid="button-register-coordinator">
+        {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
         {isLoading ? 'Registering...' : 'Register Club Coordinator'}
       </Button>
     </form>

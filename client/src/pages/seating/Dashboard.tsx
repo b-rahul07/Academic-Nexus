@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Search, Download, Shuffle, Loader2, ChevronRight } from 'lucide-react';
+import { EmptyState } from '@/components/EmptyState';
 import { motion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import { useSeatingAllocation } from '@/hooks/useSeatingAllocation';
@@ -72,14 +73,18 @@ export default function SeatingDashboard() {
                 <Label>Select Exam</Label>
                 <Select value={selectedExam} onValueChange={setSelectedExam}>
                   <SelectTrigger disabled={examsLoading}>
-                    <SelectValue placeholder="Choose exam..." />
+                    <SelectValue placeholder={examsLoading ? "Loading exams..." : "Choose exam..."} />
                   </SelectTrigger>
                   <SelectContent>
-                    {exams?.map((exam: any) => (
-                      <SelectItem key={exam.id} value={exam.id}>
-                        {exam.subjectName} ({exam.subjectCode})
-                      </SelectItem>
-                    ))}
+                    {exams && exams.length > 0 ? (
+                      exams.map((exam: any) => (
+                        <SelectItem key={exam.id} value={exam.id}>
+                          {exam.subjectName} ({exam.subjectCode})
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <SelectItem value="no-exams" disabled>No exams available</SelectItem>
+                    )}
                   </SelectContent>
                 </Select>
               </div>
@@ -88,14 +93,18 @@ export default function SeatingDashboard() {
                 <Label>Select Room</Label>
                 <Select value={selectedRoom} onValueChange={setSelectedRoom}>
                   <SelectTrigger disabled={roomsLoading}>
-                    <SelectValue placeholder="Choose room..." />
+                    <SelectValue placeholder={roomsLoading ? "Loading rooms..." : "Choose room..."} />
                   </SelectTrigger>
                   <SelectContent>
-                    {rooms?.map((room: any) => (
-                      <SelectItem key={room.id} value={room.id}>
-                        {room.roomNumber} (Capacity: {room.capacity})
-                      </SelectItem>
-                    ))}
+                    {rooms && rooms.length > 0 ? (
+                      rooms.map((room: any) => (
+                        <SelectItem key={room.id} value={room.id}>
+                          {room.roomNumber} (Capacity: {room.capacity})
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <SelectItem value="no-rooms" disabled>No rooms available</SelectItem>
+                    )}
                   </SelectContent>
                 </Select>
               </div>
@@ -124,8 +133,11 @@ export default function SeatingDashboard() {
             </CardHeader>
             <CardContent>
               {gridLoading ? (
-                <div className="h-96 flex items-center justify-center text-muted-foreground">
-                  Loading room layout...
+                <div className="h-96 flex items-center justify-center">
+                  <div className="text-center space-y-2">
+                    <Loader2 className="w-8 h-8 animate-spin mx-auto text-muted-foreground" />
+                    <p className="text-muted-foreground">Loading room layout...</p>
+                  </div>
                 </div>
               ) : gridData ? (
                 <div className="space-y-4">
@@ -211,9 +223,7 @@ export default function SeatingDashboard() {
                   </div>
                 </div>
               ) : (
-                <div className="h-96 flex items-center justify-center text-muted-foreground">
-                  Select exam and room to visualize seating
-                </div>
+                <EmptyState title="No seating data" description="Select an exam and room to visualize seating allocation" />
               )}
             </CardContent>
           </Card>

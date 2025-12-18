@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogTrigger, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Calendar } from '@/components/ui/calendar';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Calendar as CalendarIcon, Clock, MapPin, AlertCircle, Check, GripVertical } from 'lucide-react';
+import { Plus, Calendar as CalendarIcon, Clock, MapPin, AlertCircle, Check, GripVertical, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -15,6 +15,7 @@ import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea
 import { useToast } from '@/hooks/use-toast';
 import { useEvents } from '@/hooks/useEvents';
 import { useQuery } from '@tanstack/react-query';
+import { EmptyState } from '@/components/EmptyState';
 
 export default function ClubDashboard() {
   const [date, setDate] = useState<Date | undefined>(new Date());
@@ -253,7 +254,16 @@ export default function ClubDashboard() {
 
             </div>
             <DialogFooter>
-              <Button type="submit" disabled={conflict} onClick={addEvent}>Submit Proposal</Button>
+              <Button type="submit" disabled={conflict || createEvent.isPending} onClick={addEvent} className="gap-2">
+                {createEvent.isPending ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Submitting...
+                  </>
+                ) : (
+                  'Submit Proposal'
+                )}
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -285,45 +295,49 @@ export default function ClubDashboard() {
                   </div>
                   
                   <div className="flex-1 p-4 space-y-3 overflow-y-auto min-h-[100px]">
-                    {events.filter(e => e.status === status).map((event, index) => (
-                      <Draggable key={event.id} draggableId={event.id} index={index}>
-                        {(provided, snapshot) => (
-                          <div
-                            ref={provided.innerRef}
-                            {...provided.draggableProps}
-                            {...provided.dragHandleProps}
-                            style={{ ...provided.draggableProps.style }}
-                            data-testid={`event-card-${event.id}`}
-                          >
-                            <Card className={cn(
-                              "bg-card hover:bg-card/80 transition-colors border-border/50 cursor-grab active:cursor-grabbing group",
-                              snapshot.isDragging && "shadow-2xl scale-105 border-primary ring-1 ring-primary"
-                            )}>
-                              <CardContent className="p-4 space-y-3">
-                                <div className="flex justify-between items-start">
-                                  <h4 className="font-semibold text-sm group-hover:text-primary transition-colors">{event.title}</h4>
-                                  <Badge variant="secondary" className="text-[10px] h-5">{event.department}</Badge>
-                                </div>
-                                <div className="space-y-1">
-                                  <div className="flex items-center text-xs text-muted-foreground">
-                                    <CalendarIcon className="w-3 h-3 mr-2" />
-                                    {format(new Date(event.eventDate), "MMM dd, yyyy")}
+                    {events.filter(e => e.status === status).length === 0 ? (
+                      <EmptyState title="No events" description={`No ${status} events at the moment`} />
+                    ) : (
+                      events.filter(e => e.status === status).map((event, index) => (
+                        <Draggable key={event.id} draggableId={event.id} index={index}>
+                          {(provided, snapshot) => (
+                            <div
+                              ref={provided.innerRef}
+                              {...provided.draggableProps}
+                              {...provided.dragHandleProps}
+                              style={{ ...provided.draggableProps.style }}
+                              data-testid={`event-card-${event.id}`}
+                            >
+                              <Card className={cn(
+                                "bg-card hover:bg-card/80 transition-colors border-border/50 cursor-grab active:cursor-grabbing group",
+                                snapshot.isDragging && "shadow-2xl scale-105 border-primary ring-1 ring-primary"
+                              )}>
+                                <CardContent className="p-4 space-y-3">
+                                  <div className="flex justify-between items-start">
+                                    <h4 className="font-semibold text-sm group-hover:text-primary transition-colors">{event.title}</h4>
+                                    <Badge variant="secondary" className="text-[10px] h-5">{event.department}</Badge>
                                   </div>
-                                  <div className="flex items-center text-xs text-muted-foreground">
-                                    <Clock className="w-3 h-3 mr-2" />
-                                    {event.startTime} - {event.endTime}
+                                  <div className="space-y-1">
+                                    <div className="flex items-center text-xs text-muted-foreground">
+                                      <CalendarIcon className="w-3 h-3 mr-2" />
+                                      {format(new Date(event.eventDate), "MMM dd, yyyy")}
+                                    </div>
+                                    <div className="flex items-center text-xs text-muted-foreground">
+                                      <Clock className="w-3 h-3 mr-2" />
+                                      {event.startTime} - {event.endTime}
+                                    </div>
+                                     <div className="flex items-center text-xs text-muted-foreground">
+                                      <MapPin className="w-3 h-3 mr-2" />
+                                      {event.venue}
+                                    </div>
                                   </div>
-                                   <div className="flex items-center text-xs text-muted-foreground">
-                                    <MapPin className="w-3 h-3 mr-2" />
-                                    {event.venue}
-                                  </div>
-                                </div>
-                              </CardContent>
-                            </Card>
-                          </div>
-                        )}
-                      </Draggable>
-                    ))}
+                                </CardContent>
+                              </Card>
+                            </div>
+                          )}
+                        </Draggable>
+                      ))
+                    )}
                     {provided.placeholder}
                   </div>
                 </div>

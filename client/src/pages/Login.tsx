@@ -120,6 +120,7 @@ export default function Login() {
                 placeholder="Enter your Roll No, Admin ID, or Faculty ID"
                 value={identifier}
                 onChange={(e) => setIdentifier(e.target.value)}
+                disabled={loading}
                 required
                 data-testid="input-identifier"
               />

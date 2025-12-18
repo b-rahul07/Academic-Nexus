@@ -4,6 +4,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { AppProvider, useApp } from "@/context/AppContext";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import Login from "@/pages/Login";
 import ChangePassword from "@/pages/ChangePassword";
 import NotFound from "@/pages/not-found";
@@ -70,9 +71,11 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AppProvider>
-        <AppLayout>
-           <Router />
-        </AppLayout>
+        <ErrorBoundary>
+          <AppLayout>
+            <Router />
+          </AppLayout>
+        </ErrorBoundary>
         <Toaster />
       </AppProvider>
     </QueryClientProvider>
