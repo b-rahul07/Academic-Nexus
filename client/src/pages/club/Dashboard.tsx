@@ -14,50 +14,77 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 import { useToast } from '@/hooks/use-toast';
 import { useEvents } from '@/hooks/useEvents';
+import { useQuery } from '@tanstack/react-query';
 
 export default function ClubDashboard() {
   const [date, setDate] = useState<Date | undefined>(new Date());
-  const [eventTitle, setEventTitle] = useState("Tech Talk");
+  const [eventTitle, setEventTitle] = useState("");
+  const [startTime, setStartTime] = useState("10:00 AM");
+  const [endTime, setEndTime] = useState("04:00 PM");
+  const [venue, setVenue] = useState("");
   const [conflict, setConflict] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const { toast } = useToast();
   const { events, isLoading, createEvent, updateEventStatus } = useEvents();
 
+  // Fetch exams to check for conflicts
+  const { data: exams = [] } = useQuery({
+    queryKey: ['exams'],
+    queryFn: async () => {
+      const res = await fetch('/api/exams');
+      return res.json();
+    },
+  });
+
   const handleDateSelect = (newDate: Date | undefined) => {
     setDate(newDate);
-    // Fake conflict check logic
-    if (newDate && (newDate.getDate() === 15 || newDate.getDate() === 22)) {
-       setConflict(true);
-       toast({
-         title: "Conflict Detected",
-         description: "This date clashes with an existing exam.",
-         variant: "destructive",
-       });
+    checkConflicts(newDate);
+  };
+
+  const checkConflicts = (selectedDate: Date | undefined) => {
+    if (!selectedDate) {
+      setConflict(false);
+      return;
+    }
+
+    const selectedDateStr = format(selectedDate, 'yyyy-MM-dd');
+    const hasConflict = exams.some((exam: any) => exam.examDate === selectedDateStr);
+
+    if (hasConflict) {
+      setConflict(true);
+      toast({
+        title: "Conflict Detected",
+        description: "An exam is scheduled on this date. Event approval may be affected.",
+        variant: "destructive",
+      });
     } else {
-       setConflict(false);
+      setConflict(false);
     }
   };
 
   const addEvent = async () => {
-     if (date && eventTitle) {
+     if (date && eventTitle && venue && startTime && endTime) {
        try {
          await createEvent.mutateAsync({
            title: eventTitle,
            description: "",
            eventDate: format(date, 'yyyy-MM-dd'),
-           startTime: "10:00 AM",
-           endTime: "04:00 PM",
-           venue: "Main Auditorium",
+           startTime: startTime,
+           endTime: endTime,
+           venue: venue,
            department: "Club",
            status: "pending",
            createdBy: null,
          });
          toast({
            title: "Event Submitted",
-           description: "New event proposal added to pending list.",
+           description: "New event proposal added to pending list for admin approval.",
          });
          setDialogOpen(false);
-         setEventTitle("Tech Talk");
+         setEventTitle("");
+         setStartTime("10:00 AM");
+         setEndTime("04:00 PM");
+         setVenue("");
        } catch (error) {
          toast({
            title: "Error",
@@ -65,6 +92,12 @@ export default function ClubDashboard() {
            variant: "destructive",
          });
        }
+     } else {
+       toast({
+         title: "Missing Fields",
+         description: "Please fill in all required fields.",
+         variant: "destructive",
+       });
      }
   };
 
@@ -124,11 +157,14 @@ export default function ClubDashboard() {
                 </Label>
                 <Input 
                   id="name" 
+                  placeholder="e.g., Tech Fest 2025"
                   value={eventTitle} 
                   onChange={(e) => setEventTitle(e.target.value)}
                   className="col-span-3" 
+                  data-testid="input-event-name"
                 />
               </div>
+
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label className="text-right">Date</Label>
                 <div className="col-span-3">
@@ -140,6 +176,7 @@ export default function ClubDashboard() {
                           "w-full justify-start text-left font-normal",
                           !date && "text-muted-foreground"
                         )}
+                        data-testid="button-date-picker"
                       >
                         <CalendarIcon className="mr-2 h-4 w-4" />
                         {date ? format(date, "PPP") : <span>Pick a date</span>}
@@ -156,23 +193,59 @@ export default function ClubDashboard() {
                   </Popover>
                 </div>
               </div>
+
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="start-time" className="text-right">Start Time</Label>
+                <Input 
+                  id="start-time" 
+                  type="time"
+                  value={startTime} 
+                  onChange={(e) => setStartTime(e.target.value)}
+                  className="col-span-3" 
+                  data-testid="input-start-time"
+                />
+              </div>
+
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="end-time" className="text-right">End Time</Label>
+                <Input 
+                  id="end-time" 
+                  type="time"
+                  value={endTime} 
+                  onChange={(e) => setEndTime(e.target.value)}
+                  className="col-span-3" 
+                  data-testid="input-end-time"
+                />
+              </div>
+
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="venue" className="text-right">Venue</Label>
+                <Input 
+                  id="venue" 
+                  placeholder="e.g., Main Auditorium"
+                  value={venue} 
+                  onChange={(e) => setVenue(e.target.value)}
+                  className="col-span-3" 
+                  data-testid="input-venue"
+                />
+              </div>
               
               {/* CONFLICT CHECKER UI */}
               <div className="col-span-4">
                 {conflict ? (
-                  <div className="rounded-md bg-red-500/10 p-3 border border-red-500/20 flex items-start gap-3 animate-in slide-in-from-top-2">
+                  <div className="rounded-md bg-red-500/10 p-3 border border-red-500/20 flex items-start gap-3 animate-in slide-in-from-top-2" data-testid="alert-exam-conflict">
                     <AlertCircle className="w-5 h-5 text-red-500 mt-0.5" />
                     <div>
-                      <p className="text-sm font-bold text-red-500">Conflict Detected!</p>
-                      <p className="text-xs text-red-400">An exam is scheduled for this date in the Main Hall.</p>
+                      <p className="text-sm font-bold text-red-500">Conflict: Exam scheduled on this date.</p>
+                      <p className="text-xs text-red-400">Please choose a different date for your event.</p>
                     </div>
                   </div>
                 ) : date ? (
-                   <div className="rounded-md bg-emerald-500/10 p-3 border border-emerald-500/20 flex items-start gap-3 animate-in slide-in-from-top-2">
+                   <div className="rounded-md bg-emerald-500/10 p-3 border border-emerald-500/20 flex items-start gap-3 animate-in slide-in-from-top-2" data-testid="alert-no-conflict">
                     <Check className="w-5 h-5 text-emerald-500 mt-0.5" />
                     <div>
                       <p className="text-sm font-bold text-emerald-500">Date Available</p>
-                      <p className="text-xs text-emerald-400">No conflicts found in the master schedule.</p>
+                      <p className="text-xs text-emerald-400">No exam conflicts. Event will go to admin for approval.</p>
                     </div>
                   </div>
                 ) : null}
