@@ -1,18 +1,98 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, timestamp, integer, date, boolean } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
+// Users table
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
+  role: text("role").notNull(), // student, admin, seating_manager, club_coordinator
+  name: text("name").notNull(),
+  department: text("department"),
+  semester: integer("semester"),
+  rollNumber: text("roll_number"),
 });
 
-export const insertUserSchema = createInsertSchema(users).pick({
-  username: true,
-  password: true,
+// Events/Club activities
+export const events = pgTable("events", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  title: text("title").notNull(),
+  description: text("description"),
+  eventDate: date("event_date").notNull(),
+  startTime: text("start_time"),
+  endTime: text("end_time"),
+  venue: text("venue"),
+  department: text("department").notNull(),
+  status: text("status").notNull().default('pending'), // pending, approved, rejected
+  createdBy: varchar("created_by").references(() => users.id),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+// Exams
+export const exams = pgTable("exams", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  subjectName: text("subject_name").notNull(),
+  subjectCode: text("subject_code").notNull(),
+  examDate: date("exam_date").notNull(),
+  startTime: text("start_time").notNull(),
+  endTime: text("end_time").notNull(),
+  semester: integer("semester").notNull(),
+  department: text("department").notNull(),
+});
+
+// Seating Allocations
+export const seatings = pgTable("seatings", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  examId: varchar("exam_id").references(() => exams.id),
+  studentId: varchar("student_id").references(() => users.id),
+  room: text("room").notNull(),
+  seatNumber: integer("seat_number").notNull(),
+  row: integer("row"),
+  column: integer("col"),
+});
+
+// Class Schedule
+export const schedules = pgTable("schedules", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  subjectName: text("subject_name").notNull(),
+  room: text("room").notNull(),
+  dayOfWeek: integer("day_of_week").notNull(), // 0-6
+  startTime: text("start_time").notNull(),
+  endTime: text("end_time").notNull(),
+  semester: integer("semester").notNull(),
+  department: text("department").notNull(),
+});
+
+// System Config (for exam mode toggle)
+export const systemConfig = pgTable("system_config", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  examMode: boolean("exam_mode").notNull().default(false),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+// Insert Schemas
+export const insertUserSchema = createInsertSchema(users).omit({ id: true });
+export const insertEventSchema = createInsertSchema(events).omit({ id: true, createdAt: true });
+export const insertExamSchema = createInsertSchema(exams).omit({ id: true });
+export const insertSeatingSchema = createInsertSchema(seatings).omit({ id: true });
+export const insertScheduleSchema = createInsertSchema(schedules).omit({ id: true });
+
+// Types
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
+
+export type InsertEvent = z.infer<typeof insertEventSchema>;
+export type Event = typeof events.$inferSelect;
+
+export type InsertExam = z.infer<typeof insertExamSchema>;
+export type Exam = typeof exams.$inferSelect;
+
+export type InsertSeating = z.infer<typeof insertSeatingSchema>;
+export type Seating = typeof seatings.$inferSelect;
+
+export type InsertSchedule = z.infer<typeof insertScheduleSchema>;
+export type Schedule = typeof schedules.$inferSelect;
+
+export type SystemConfig = typeof systemConfig.$inferSelect;
