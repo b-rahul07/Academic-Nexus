@@ -42,15 +42,35 @@ export const exams = pgTable("exams", {
   department: text("department").notNull(),
 });
 
-// Seating Allocations
+// Examination Rooms
+export const rooms = pgTable("rooms", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  roomNumber: text("room_number").notNull().unique(),
+  capacity: integer("capacity").notNull(),
+  rows: integer("rows").notNull(),
+  columns: integer("columns").notNull(),
+  building: text("building"),
+});
+
+// Seating Chart (stores complete allocation for an exam in a room)
+export const seatingChart = pgTable("seating_chart", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  examId: varchar("exam_id").notNull().references(() => exams.id),
+  roomId: varchar("room_id").notNull().references(() => rooms.id),
+  grid: text("grid").notNull(), // JSON string of the seating grid
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+// Seating Allocations (individual student seat assignments)
 export const seatings = pgTable("seatings", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   examId: varchar("exam_id").references(() => exams.id),
+  roomId: varchar("room_id").references(() => rooms.id),
   studentId: varchar("student_id").references(() => users.id),
-  room: text("room").notNull(),
-  seatNumber: integer("seat_number").notNull(),
-  row: integer("row"),
-  column: integer("col"),
+  row: integer("row").notNull(),
+  column: integer("column").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
 // Class Schedule
@@ -76,7 +96,9 @@ export const systemConfig = pgTable("system_config", {
 export const insertUserSchema = createInsertSchema(users).omit({ id: true });
 export const insertEventSchema = createInsertSchema(events).omit({ id: true, createdAt: true });
 export const insertExamSchema = createInsertSchema(exams).omit({ id: true });
-export const insertSeatingSchema = createInsertSchema(seatings).omit({ id: true });
+export const insertRoomSchema = createInsertSchema(rooms).omit({ id: true });
+export const insertSeatingSchema = createInsertSchema(seatings).omit({ id: true, createdAt: true });
+export const insertSeatingChartSchema = createInsertSchema(seatingChart).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertScheduleSchema = createInsertSchema(schedules).omit({ id: true });
 
 // Types
@@ -89,8 +111,14 @@ export type Event = typeof events.$inferSelect;
 export type InsertExam = z.infer<typeof insertExamSchema>;
 export type Exam = typeof exams.$inferSelect;
 
+export type InsertRoom = z.infer<typeof insertRoomSchema>;
+export type Room = typeof rooms.$inferSelect;
+
 export type InsertSeating = z.infer<typeof insertSeatingSchema>;
 export type Seating = typeof seatings.$inferSelect;
+
+export type InsertSeatingChart = z.infer<typeof insertSeatingChartSchema>;
+export type SeatingChart = typeof seatingChart.$inferSelect;
 
 export type InsertSchedule = z.infer<typeof insertScheduleSchema>;
 export type Schedule = typeof schedules.$inferSelect;

@@ -1,11 +1,12 @@
-import React from 'react';
-import { useApp } from '@/context/AppContext';
+import React, { useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
 import { Users, Calendar, AlertTriangle, ShieldCheck, FileText, TrendingUp, CheckCircle } from 'lucide-react';
+import { useExamMode } from '@/hooks/useExamMode';
+import { useEvents } from '@/hooks/useEvents';
 
 const data = [
   { name: 'Jan', events: 4, exams: 2 },
@@ -17,7 +18,14 @@ const data = [
 ];
 
 export default function AdminDashboard() {
-  const { examMode, toggleExamMode } = useApp();
+  const { examMode, isLoading: examModeLoading, toggleExamMode: toggleExamModeApi } = useExamMode();
+  const { events } = useEvents();
+
+  const handleToggle = async (checked: boolean) => {
+    await toggleExamModeApi(checked);
+  };
+
+  const pendingEvents = events.filter(e => e.status === 'pending').length;
 
   return (
     <div className="space-y-8">
@@ -28,7 +36,12 @@ export default function AdminDashboard() {
         </div>
         <div className="flex items-center gap-4 bg-card/50 border border-white/10 p-3 rounded-xl backdrop-blur-md">
            <Label htmlFor="exam-mode" className="font-medium cursor-pointer">One-Click Exam Mode</Label>
-           <Switch id="exam-mode" checked={examMode} onCheckedChange={toggleExamMode} />
+           <Switch 
+             id="exam-mode" 
+             checked={examMode} 
+             onCheckedChange={handleToggle}
+             disabled={examModeLoading}
+           />
            {examMode && <span className="text-xs text-red-400 font-bold animate-pulse">ACTIVE</span>}
         </div>
       </div>
@@ -55,7 +68,7 @@ export default function AdminDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Pending Approvals</p>
-                <h3 className="text-2xl font-bold">14</h3>
+                <h3 className="text-2xl font-bold">{pendingEvents}</h3>
               </div>
               <div className="p-3 bg-orange-500/10 rounded-lg text-orange-500"><AlertTriangle className="w-5 h-5" /></div>
             </div>

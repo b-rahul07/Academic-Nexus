@@ -13,20 +13,15 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { motion, AnimatePresence } from 'framer-motion';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 import { useToast } from '@/hooks/use-toast';
-
-// Mock Data
-const initialEvents = [
-  { id: '1', title: 'Robotics Workshop', date: new Date(2025, 11, 20), status: 'approved', dept: 'Engineering' },
-  { id: '2', title: 'Annual Drama Fest', date: new Date(2025, 11, 22), status: 'pending', dept: 'Arts' },
-  { id: '3', title: 'Debate Championship', date: new Date(2025, 11, 25), status: 'rejected', dept: 'Humanities' },
-  { id: '4', title: 'AI Symposium', date: new Date(2025, 11, 28), status: 'pending', dept: 'CS' },
-];
+import { useEvents } from '@/hooks/useEvents';
 
 export default function ClubDashboard() {
-  const [events, setEvents] = useState(initialEvents);
   const [date, setDate] = useState<Date | undefined>(new Date());
+  const [eventTitle, setEventTitle] = useState("Tech Talk");
   const [conflict, setConflict] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
   const { toast } = useToast();
+  const { events, isLoading, createEvent, updateEventStatus } = useEvents();
 
   const handleDateSelect = (newDate: Date | undefined) => {
     setDate(newDate);
@@ -43,18 +38,38 @@ export default function ClubDashboard() {
     }
   };
 
-  const addEvent = () => {
-     if (date) {
-       setEvents([...events, { id: Date.now().toString(), title: "New Event", date: date, status: 'pending', dept: 'Club' }]);
-       toast({
-         title: "Event Submitted",
-         description: "New event proposal added to pending list.",
-       });
+  const addEvent = async () => {
+     if (date && eventTitle) {
+       try {
+         await createEvent.mutateAsync({
+           title: eventTitle,
+           description: "",
+           eventDate: format(date, 'yyyy-MM-dd'),
+           startTime: "10:00 AM",
+           endTime: "04:00 PM",
+           venue: "Main Auditorium",
+           department: "Club",
+           status: "pending",
+           createdBy: null,
+         });
+         toast({
+           title: "Event Submitted",
+           description: "New event proposal added to pending list.",
+         });
+         setDialogOpen(false);
+         setEventTitle("Tech Talk");
+       } catch (error) {
+         toast({
+           title: "Error",
+           description: "Failed to create event.",
+           variant: "destructive",
+         });
+       }
      }
   };
 
-  const onDragEnd = (result: DropResult) => {
-    const { source, destination } = result;
+  const onDragEnd = async (result: DropResult) => {
+    const { source, destination, draggableId } = result;
 
     if (!destination) return;
 
@@ -62,33 +77,27 @@ export default function ClubDashboard() {
       return;
     }
 
-    const sourceStatus = source.droppableId;
     const destStatus = destination.droppableId;
 
-    const sourceItems = events.filter(e => e.status === sourceStatus);
-    const destItems = events.filter(e => e.status === destStatus);
-    const otherItems = events.filter(e => e.status !== sourceStatus && e.status !== destStatus);
-
-    const [removed] = sourceItems.splice(source.index, 1);
-    
-    // Create new event object with updated status
-    const movedEvent = { ...removed, status: destStatus };
-
-    // Insert into destination
-    if (sourceStatus === destStatus) {
-       sourceItems.splice(destination.index, 0, movedEvent);
-       setEvents([...otherItems, ...sourceItems]);
-    } else {
-       destItems.splice(destination.index, 0, movedEvent);
-       setEvents([...otherItems, ...sourceItems, ...destItems]);
-       
-       toast({
-         title: "Status Updated",
-         description: `Event moved to ${destStatus}.`,
-         className: destStatus === 'approved' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500' : ''
-       });
+    try {
+      await updateEventStatus.mutateAsync({ id: draggableId, status: destStatus });
+      toast({
+        title: "Status Updated",
+        description: `Event moved to ${destStatus}.`,
+        className: destStatus === 'approved' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500' : ''
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update event status.",
+        variant: "destructive",
+      });
     }
   };
+
+  if (isLoading) {
+    return <div className="flex items-center justify-center h-96">Loading events...</div>;
+  }
 
   return (
     <div className="space-y-6">
@@ -97,7 +106,7 @@ export default function ClubDashboard() {
           <h1 className="text-3xl font-bold">Club Events</h1>
           <p className="text-muted-foreground">Coordinate and approve campus activities.</p>
         </div>
-        <Dialog>
+        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
             <Button className="gap-2" data-testid="btn-new-event"><Plus className="w-4 h-4" /> New Event Request</Button>
           </DialogTrigger>
@@ -113,7 +122,12 @@ export default function ClubDashboard() {
                 <Label htmlFor="name" className="text-right">
                   Event Name
                 </Label>
-                <Input id="name" defaultValue="Tech Talk" className="col-span-3" />
+                <Input 
+                  id="name" 
+                  value={eventTitle} 
+                  onChange={(e) => setEventTitle(e.target.value)}
+                  className="col-span-3" 
+                />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label className="text-right">Date</Label>
@@ -215,20 +229,20 @@ export default function ClubDashboard() {
                               <CardContent className="p-4 space-y-3">
                                 <div className="flex justify-between items-start">
                                   <h4 className="font-semibold text-sm group-hover:text-primary transition-colors">{event.title}</h4>
-                                  <Badge variant="secondary" className="text-[10px] h-5">{event.dept}</Badge>
+                                  <Badge variant="secondary" className="text-[10px] h-5">{event.department}</Badge>
                                 </div>
                                 <div className="space-y-1">
                                   <div className="flex items-center text-xs text-muted-foreground">
                                     <CalendarIcon className="w-3 h-3 mr-2" />
-                                    {format(event.date, "MMM dd, yyyy")}
+                                    {format(new Date(event.eventDate), "MMM dd, yyyy")}
                                   </div>
                                   <div className="flex items-center text-xs text-muted-foreground">
                                     <Clock className="w-3 h-3 mr-2" />
-                                    10:00 AM - 4:00 PM
+                                    {event.startTime} - {event.endTime}
                                   </div>
                                    <div className="flex items-center text-xs text-muted-foreground">
                                     <MapPin className="w-3 h-3 mr-2" />
-                                    Main Auditorium
+                                    {event.venue}
                                   </div>
                                 </div>
                               </CardContent>

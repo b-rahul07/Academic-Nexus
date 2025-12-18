@@ -5,15 +5,21 @@ import {
   type InsertEvent,
   type Exam,
   type InsertExam,
+  type Room,
+  type InsertRoom,
   type Seating,
   type InsertSeating,
+  type SeatingChart,
+  type InsertSeatingChart,
   type Schedule,
   type InsertSchedule,
   type SystemConfig,
   users,
   events,
   exams,
+  rooms,
   seatings,
+  seatingChart,
   schedules,
   systemConfig
 } from "@shared/schema";
@@ -49,11 +55,24 @@ export interface IStorage {
   createExam(exam: InsertExam): Promise<Exam>;
   getExamsByDepartment(department: string): Promise<Exam[]>;
   
+  // Rooms
+  getAllRooms(): Promise<Room[]>;
+  getRoomById(id: string): Promise<Room | undefined>;
+  createRoom(room: InsertRoom): Promise<Room>;
+  getRoomByNumber(roomNumber: string): Promise<Room | undefined>;
+  
   // Seatings
   getSeatingsForExam(examId: string): Promise<Seating[]>;
+  getSeatingsForExamAndRoom(examId: string, roomId: string): Promise<Seating[]>;
   createSeating(seating: InsertSeating): Promise<Seating>;
   getSeatingsForStudent(studentId: string): Promise<Seating[]>;
+  deleteSeatingsByExamAndRoom(examId: string, roomId: string): Promise<void>;
   deleteSeatingsByExam(examId: string): Promise<void>;
+  
+  // Seating Charts
+  getSeatingChart(examId: string, roomId: string): Promise<SeatingChart | undefined>;
+  createSeatingChart(chart: InsertSeatingChart): Promise<SeatingChart>;
+  updateSeatingChart(id: string, grid: string): Promise<SeatingChart | undefined>;
   
   // Schedules
   getSchedulesByDepartmentAndSemester(department: string, semester: number): Promise<Schedule[]>;
@@ -128,9 +147,35 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(exams).where(eq(exams.department, department));
   }
 
+  // Rooms
+  async getAllRooms(): Promise<Room[]> {
+    return await db.select().from(rooms);
+  }
+
+  async getRoomById(id: string): Promise<Room | undefined> {
+    const result = await db.select().from(rooms).where(eq(rooms.id, id)).limit(1);
+    return result[0];
+  }
+
+  async createRoom(room: InsertRoom): Promise<Room> {
+    const result = await db.insert(rooms).values(room).returning();
+    return result[0];
+  }
+
+  async getRoomByNumber(roomNumber: string): Promise<Room | undefined> {
+    const result = await db.select().from(rooms).where(eq(rooms.roomNumber, roomNumber)).limit(1);
+    return result[0];
+  }
+
   // Seatings
   async getSeatingsForExam(examId: string): Promise<Seating[]> {
     return await db.select().from(seatings).where(eq(seatings.examId, examId));
+  }
+
+  async getSeatingsForExamAndRoom(examId: string, roomId: string): Promise<Seating[]> {
+    return await db.select().from(seatings).where(
+      and(eq(seatings.examId, examId), eq(seatings.roomId, roomId))
+    );
   }
 
   async createSeating(seating: InsertSeating): Promise<Seating> {
@@ -142,8 +187,35 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(seatings).where(eq(seatings.studentId, studentId));
   }
 
+  async deleteSeatingsByExamAndRoom(examId: string, roomId: string): Promise<void> {
+    await db.delete(seatings).where(
+      and(eq(seatings.examId, examId), eq(seatings.roomId, roomId))
+    );
+  }
+
   async deleteSeatingsByExam(examId: string): Promise<void> {
     await db.delete(seatings).where(eq(seatings.examId, examId));
+  }
+
+  // Seating Charts
+  async getSeatingChart(examId: string, roomId: string): Promise<SeatingChart | undefined> {
+    const result = await db.select().from(seatingChart).where(
+      and(eq(seatingChart.examId, examId), eq(seatingChart.roomId, roomId))
+    ).limit(1);
+    return result[0];
+  }
+
+  async createSeatingChart(chart: InsertSeatingChart): Promise<SeatingChart> {
+    const result = await db.insert(seatingChart).values(chart).returning();
+    return result[0];
+  }
+
+  async updateSeatingChart(id: string, grid: string): Promise<SeatingChart | undefined> {
+    const result = await db.update(seatingChart)
+      .set({ grid, updatedAt: new Date() })
+      .where(eq(seatingChart.id, id))
+      .returning();
+    return result[0];
   }
 
   // Schedules
