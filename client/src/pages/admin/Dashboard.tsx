@@ -8,6 +8,7 @@ import { Users, Calendar, AlertTriangle, ShieldCheck, FileText, TrendingUp, Chec
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useExamMode } from '@/hooks/useExamMode';
 import { useEvents } from '@/hooks/useEvents';
+import { useToast } from '@/hooks/use-toast';
 import { TicketVerifier } from '@/components/TicketVerifier';
 
 const data = [
@@ -22,9 +23,15 @@ const data = [
 export default function AdminDashboard() {
   const { examMode, isLoading: examModeLoading, toggleExamMode: toggleExamModeApi } = useExamMode();
   const { events } = useEvents();
+  const { toast } = useToast();
 
   const handleToggle = async (checked: boolean) => {
     await toggleExamModeApi(checked);
+    toast({
+      title: checked ? "Exam Mode Activated" : "Exam Mode Deactivated",
+      description: checked ? "System is now in exam mode." : "System is back to normal mode.",
+      className: checked ? 'bg-red-500/10 border-red-500/20 text-red-500' : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500',
+    });
   };
 
   const pendingEvents = events.filter(e => e.status === 'pending').length;

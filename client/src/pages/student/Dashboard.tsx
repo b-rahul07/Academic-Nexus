@@ -15,7 +15,7 @@ import { motion } from 'framer-motion';
 import { PDFDownloadLink } from '@react-pdf/renderer';
 import { HallTicketPDF } from '@/components/HallTicketPDF';
 import { StudySupport } from '@/components/StudySupport';
-import { toast } from '@/hooks/use-toast';
+import { useToast } from '@/hooks/use-toast';
 
 // --- LIVE TICKER COMPONENT ---
 const LiveTicker = () => {
@@ -187,7 +187,11 @@ const HallTicket = () => {
                 fileName="hall-ticket-2025.pdf"
              >
                 {({ blob, url, loading, error }) => (
-                  <Button size="sm" disabled={loading} data-testid="button-download-pdf">
+                  <Button 
+                    size="sm" 
+                    disabled={loading} 
+                    data-testid="button-download-pdf"
+                  >
                     {loading ? <Loader2 className="w-3 h-3 animate-spin mr-2" /> : <Download className="w-3 h-3 mr-2" />}
                     {loading ? 'Generating PDF...' : 'Download PDF'}
                   </Button>
@@ -206,6 +210,17 @@ const HallTicket = () => {
 
 export default function StudentDashboard() {
   const { examMode } = useApp();
+  const { toast } = useToast();
+
+  const handleTicketDownload = () => {
+    setTimeout(() => {
+      toast({
+        title: "Hall Ticket Downloaded",
+        description: "Your examination hall ticket has been successfully downloaded.",
+        className: 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500',
+      });
+    }, 1500);
+  };
 
   return (
     <div className="space-y-6">

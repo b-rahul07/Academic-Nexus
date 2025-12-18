@@ -5,25 +5,36 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { GraduationCap, Shield, Users, PartyPopper, Lock, ArrowRight } from 'lucide-react';
+import { GraduationCap, Shield, Users, PartyPopper, Lock, ArrowRight, Zap } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 import bgImage from '@assets/generated_images/abstract_executive_dark_background_with_glassmorphism_elements.png';
 import logo from '@assets/generated_images/minimalist_academic_university_logo_emblem.png';
 
 export default function Login() {
   const { login } = useApp();
+  const { toast } = useToast();
   const [, setLocation] = useLocation();
   const [loading, setLoading] = useState<string | null>(null);
+  const [showDevMode, setShowDevMode] = useState(false);
 
-  const handleLogin = (role: string, path: string) => {
+  const handleLogin = (role: string, path: string, displayName?: string) => {
     setLoading(role);
     setTimeout(() => {
       login(role as any);
+      if (displayName) {
+        toast({
+          title: "Welcome!",
+          description: `Logged in as ${displayName}`,
+          duration: 2000,
+        });
+      }
       setLocation(path);
     }, 800);
   };
 
-  const handleQuickLogin = (role: string, path: string) => {
-    handleLogin(role, path);
+  const handleDevLogin = (role: string, path: string, displayName: string) => {
+    handleLogin(role, path, displayName);
+    setShowDevMode(false);
   };
 
   const roles = [
@@ -102,38 +113,89 @@ export default function Login() {
             </button>
           ))}
 
-          {/* Quick Demo Login Buttons */}
+          {/* Dev Mode Dropdown */}
           <div className="mt-6 pt-6 border-t border-white/10">
-            <p className="text-xs text-muted-foreground mb-3 text-center">Quick Demo Login (No Password Required)</p>
-            <div className="grid grid-cols-1 gap-2">
-              <Button 
-                size="sm" 
-                variant="outline" 
-                onClick={() => handleQuickLogin('student', '/student')}
-                disabled={!!loading}
-                data-testid="button-demo-student"
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-xs text-muted-foreground">Quick Access (No Password Required)</p>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => setShowDevMode(!showDevMode)}
+                className="gap-2"
+                data-testid="button-dev-mode-toggle"
               >
-                Demo Student
-              </Button>
-              <Button 
-                size="sm" 
-                variant="outline" 
-                onClick={() => handleQuickLogin('admin', '/admin')}
-                disabled={!!loading}
-                data-testid="button-demo-admin"
-              >
-                Demo Admin
-              </Button>
-              <Button 
-                size="sm" 
-                variant="outline" 
-                onClick={() => handleQuickLogin('seating_manager', '/seating')}
-                disabled={!!loading}
-                data-testid="button-demo-manager"
-              >
-                Demo Manager
+                <Zap className="w-4 h-4" />
+                {showDevMode ? 'Hide' : 'Dev Mode'}
               </Button>
             </div>
+
+            {showDevMode ? (
+              <div className="space-y-2 p-3 rounded-lg bg-white/5 border border-white/10">
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  onClick={() => handleDevLogin('admin', '/admin', 'Super Admin')}
+                  disabled={!!loading}
+                  className="w-full justify-start gap-2"
+                  data-testid="button-dev-super-admin"
+                >
+                  <Shield className="w-3 h-3" />
+                  Super Admin
+                </Button>
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  onClick={() => handleDevLogin('student', '/student', 'Rahul (Exam Tomorrow)')}
+                  disabled={!!loading}
+                  className="w-full justify-start gap-2"
+                  data-testid="button-dev-student-rahul"
+                >
+                  <GraduationCap className="w-3 h-3" />
+                  Student: Rahul
+                </Button>
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  onClick={() => handleDevLogin('club_coordinator', '/club', 'Club Coordinator')}
+                  disabled={!!loading}
+                  className="w-full justify-start gap-2"
+                  data-testid="button-dev-club-coordinator"
+                >
+                  <PartyPopper className="w-3 h-3" />
+                  Club Coordinator
+                </Button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-2">
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  onClick={() => handleDevLogin('student', '/student', 'Demo Student')}
+                  disabled={!!loading}
+                  data-testid="button-demo-student"
+                >
+                  Demo Student
+                </Button>
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  onClick={() => handleDevLogin('admin', '/admin', 'Demo Admin')}
+                  disabled={!!loading}
+                  data-testid="button-demo-admin"
+                >
+                  Demo Admin
+                </Button>
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  onClick={() => handleDevLogin('seating_manager', '/seating', 'Demo Manager')}
+                  disabled={!!loading}
+                  data-testid="button-demo-manager"
+                >
+                  Demo Manager
+                </Button>
+              </div>
+            )}
           </div>
         </div>
 
