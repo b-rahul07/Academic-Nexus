@@ -139,38 +139,68 @@ export default function SeatingDashboard() {
                         width: 'fit-content',
                       }}>
                         {gridData.grid.map((row, rowIdx) =>
-                          row.map((cell, colIdx) => (
-                            <Tooltip key={`${rowIdx}-${colIdx}`}>
-                              <TooltipTrigger asChild>
-                                <button
-                                  className={`w-6 h-6 md:w-8 md:h-8 rounded-md flex items-center justify-center text-[8px] font-mono transition-all
-                                    ${!cell ? 'bg-white/10 border border-white/20 hover:bg-white/20' : 'bg-emerald-500 text-white shadow-lg hover:scale-110'}
-                                  `}
-                                >
-                                  {cell && cell.studentId ? cell.studentId.slice(0, 4) : '·'}
-                                </button>
-                              </TooltipTrigger>
-                              {cell && (
-                                <TooltipContent className="bg-slate-900 text-white border-slate-700">
-                                  <div className="text-sm">
-                                    <p className="font-bold">{cell.studentName}</p>
-                                    <p className="text-xs text-gray-300">{cell.rollNumber}</p>
-                                    <p className="text-xs text-emerald-300">{cell.department}</p>
-                                    <p className="text-xs text-gray-400 mt-1">Seat: {rowIdx + 1}-{colIdx + 1}</p>
-                                  </div>
-                                </TooltipContent>
-                              )}
-                            </Tooltip>
-                          ))
+                          row.map((cell, colIdx) => {
+                            const getDepartmentColor = (dept: string | undefined) => {
+                              const colors: Record<string, string> = {
+                                'Computer Science': 'bg-blue-500',
+                                'Mechanical Engineering': 'bg-orange-500',
+                                'Electrical Engineering': 'bg-purple-500',
+                                'Civil Engineering': 'bg-green-500',
+                                'Electronics': 'bg-red-500',
+                              };
+                              return (dept && colors[dept]) || 'bg-emerald-500';
+                            };
+                            
+                            return (
+                              <Tooltip key={`${rowIdx}-${colIdx}`}>
+                                <TooltipTrigger asChild>
+                                  <button
+                                    className={`w-6 h-6 md:w-8 md:h-8 rounded-md flex items-center justify-center text-[8px] font-mono transition-all
+                                      ${!cell ? 'bg-white/10 border border-white/20 hover:bg-white/20' : `${getDepartmentColor(cell.department)} text-white shadow-lg hover:scale-110`}
+                                    `}
+                                    data-testid={`seat-${rowIdx}-${colIdx}`}
+                                  >
+                                    {cell && cell.studentId ? cell.studentId.slice(0, 4) : '·'}
+                                  </button>
+                                </TooltipTrigger>
+                                {cell && (
+                                  <TooltipContent className="bg-slate-900 text-white border-slate-700">
+                                    <div className="text-sm">
+                                      <p className="font-bold">{cell.studentName}</p>
+                                      <p className="text-xs text-gray-300">{cell.rollNumber}</p>
+                                      <p className="text-xs text-cyan-300">{cell.department}</p>
+                                      <p className="text-xs text-gray-400 mt-1">Seat: {rowIdx + 1}-{colIdx + 1}</p>
+                                    </div>
+                                  </TooltipContent>
+                                )}
+                              </Tooltip>
+                            );
+                          })
                         )}
                       </div>
                     </TooltipProvider>
                   </div>
 
-                  <div className="flex gap-4 justify-between text-xs">
+                  <div className="flex gap-2 justify-center flex-wrap text-xs">
                     <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 bg-emerald-500 rounded"></div>
-                      <span>Occupied</span>
+                      <div className="w-3 h-3 bg-blue-500 rounded"></div>
+                      <span>Computer Science</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 bg-orange-500 rounded"></div>
+                      <span>Mechanical</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 bg-purple-500 rounded"></div>
+                      <span>Electrical</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 bg-green-500 rounded"></div>
+                      <span>Civil</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 bg-red-500 rounded"></div>
+                      <span>Electronics</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <div className="w-3 h-3 bg-white/10 rounded border border-white/20"></div>

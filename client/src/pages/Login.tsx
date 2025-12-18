@@ -22,6 +22,10 @@ export default function Login() {
     }, 800);
   };
 
+  const handleQuickLogin = (role: string, path: string) => {
+    handleLogin(role, path);
+  };
+
   const roles = [
     { id: 'student', label: 'Student Portal', icon: GraduationCap, path: '/student', color: 'from-blue-500 to-cyan-500' },
     { id: 'admin', label: 'Administrator', icon: Shield, path: '/admin', color: 'from-purple-500 to-pink-500' },
@@ -70,6 +74,7 @@ export default function Login() {
               onClick={() => handleLogin(role.id, role.path)}
               className="group relative overflow-hidden rounded-xl border border-white/10 bg-white/5 p-4 transition-all hover:bg-white/10 hover:border-white/20 hover:shadow-2xl hover:shadow-primary/5 text-left"
               disabled={!!loading}
+              data-testid={`button-login-${role.id}`}
             >
               <div className={`absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b ${role.color} opacity-0 transition-opacity group-hover:opacity-100`} />
               
@@ -96,6 +101,40 @@ export default function Login() {
               </div>
             </button>
           ))}
+
+          {/* Quick Demo Login Buttons */}
+          <div className="mt-6 pt-6 border-t border-white/10">
+            <p className="text-xs text-muted-foreground mb-3 text-center">Quick Demo Login (No Password Required)</p>
+            <div className="grid grid-cols-1 gap-2">
+              <Button 
+                size="sm" 
+                variant="outline" 
+                onClick={() => handleQuickLogin('student', '/student')}
+                disabled={!!loading}
+                data-testid="button-demo-student"
+              >
+                Demo Student
+              </Button>
+              <Button 
+                size="sm" 
+                variant="outline" 
+                onClick={() => handleQuickLogin('admin', '/admin')}
+                disabled={!!loading}
+                data-testid="button-demo-admin"
+              >
+                Demo Admin
+              </Button>
+              <Button 
+                size="sm" 
+                variant="outline" 
+                onClick={() => handleQuickLogin('seating_manager', '/seating')}
+                disabled={!!loading}
+                data-testid="button-demo-manager"
+              >
+                Demo Manager
+              </Button>
+            </div>
+          </div>
         </div>
 
       </div>
