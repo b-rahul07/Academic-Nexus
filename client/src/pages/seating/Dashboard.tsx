@@ -4,12 +4,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, Armchair, Download, Shuffle, Map } from 'lucide-react';
+import { Search, Armchair, Download, Shuffle, Map, Info } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 const GRID_SIZE = 8;
 
 export default function SeatingDashboard() {
   const [allocated, setAllocated] = useState(false);
+  const [selectedSeat, setSelectedSeat] = useState<number | null>(null);
 
   // Generate a mock grid of seats
   // 0: Empty, 1: Student A (Dept CS), 2: Student B (Dept ME) - ensure no adjacent same colors
@@ -111,32 +113,52 @@ export default function SeatingDashboard() {
               <div className="w-full aspect-square md:aspect-video bg-black/40 rounded-xl border border-white/10 p-6 flex flex-col items-center justify-center relative overflow-hidden">
                 <div className="absolute top-2 left-1/2 -translate-x-1/2 bg-white/10 px-4 py-1 rounded-b text-xs uppercase tracking-widest text-muted-foreground">Instructor Podium</div>
                 
-                <div className="grid grid-cols-8 gap-2 md:gap-4 mt-8">
-                  {[...Array(64)].map((_, i) => {
-                    // Simple mock logic for visualization
-                    let status = 'empty';
-                    if (allocated) {
-                      // Checkerboard pattern simulation for departments
-                      const row = Math.floor(i / 8);
-                      const col = i % 8;
-                      status = (row + col) % 2 === 0 ? 'dept1' : 'dept2';
-                    }
+                <TooltipProvider>
+                  <div className="grid grid-cols-8 gap-2 md:gap-4 mt-8">
+                    {[...Array(64)].map((_, i) => {
+                      // Simple mock logic for visualization
+                      let status = 'empty';
+                      let dept = null;
+                      if (allocated) {
+                        // Checkerboard pattern simulation for departments
+                        const row = Math.floor(i / 8);
+                        const col = i % 8;
+                        status = (row + col) % 2 === 0 ? 'dept1' : 'dept2';
+                        dept = status === 'dept1' ? 'CS' : 'ME';
+                      }
 
-                    return (
-                      <div 
-                        key={i} 
-                        className={`
-                          w-6 h-6 md:w-10 md:h-10 rounded-md flex items-center justify-center text-[8px] md:text-[10px] font-mono transition-all duration-500
-                          ${status === 'empty' ? 'bg-white/5 border border-white/10' : ''}
-                          ${status === 'dept1' ? 'bg-blue-500 text-white shadow-[0_0_10px_rgba(59,130,246,0.5)] scale-100' : ''}
-                          ${status === 'dept2' ? 'bg-orange-500 text-white shadow-[0_0_10px_rgba(249,115,22,0.5)] scale-100' : ''}
-                        `}
-                      >
-                         {allocated ? i + 1 : <Armchair className="w-3 h-3 md:w-4 md:h-4 opacity-20" />}
-                      </div>
-                    );
-                  })}
-                </div>
+                      return (
+                        <Tooltip key={i}>
+                          <TooltipTrigger asChild>
+                            <button
+                              onClick={() => setSelectedSeat(i)}
+                              className={`
+                                w-6 h-6 md:w-10 md:h-10 rounded-md flex items-center justify-center text-[8px] md:text-[10px] font-mono transition-all duration-300
+                                ${status === 'empty' ? 'bg-white/5 border border-white/10 hover:bg-white/10' : ''}
+                                ${status === 'dept1' ? 'bg-blue-500 text-white shadow-[0_0_10px_rgba(59,130,246,0.5)] hover:scale-110 hover:z-10' : ''}
+                                ${status === 'dept2' ? 'bg-orange-500 text-white shadow-[0_0_10px_rgba(249,115,22,0.5)] hover:scale-110 hover:z-10' : ''}
+                                ${selectedSeat === i ? 'ring-2 ring-white ring-offset-2 ring-offset-black' : ''}
+                              `}
+                            >
+                               {allocated ? i + 1 : <Armchair className="w-3 h-3 md:w-4 md:h-4 opacity-20" />}
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            {allocated ? (
+                              <div className="text-xs">
+                                <p className="font-bold">Student {100 + i}</p>
+                                <p className="text-muted-foreground">Dept: {dept}</p>
+                                <p className="text-muted-foreground">Seat: {i + 1}</p>
+                              </div>
+                            ) : (
+                              <p className="text-xs">Empty Seat {i+1}</p>
+                            )}
+                          </TooltipContent>
+                        </Tooltip>
+                      );
+                    })}
+                  </div>
+                </TooltipProvider>
 
                 {allocated && (
                   <div className="absolute bottom-4 right-4 flex gap-4 text-xs bg-black/80 p-2 rounded border border-white/10">

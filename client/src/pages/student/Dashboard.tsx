@@ -9,14 +9,17 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ReactFlow, Background, Controls, Handle, Position, MarkerType } from 'reactflow';
 import 'reactflow/dist/style.css';
-import { Calendar, Clock, MapPin, Download, QrCode, BookOpen, ExternalLink, GraduationCap, Trophy, AlertCircle } from 'lucide-react';
+import { Calendar, Clock, MapPin, Download, QrCode, BookOpen, ExternalLink, GraduationCap, Trophy, AlertCircle, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
+import { PDFDownloadLink } from '@react-pdf/renderer';
+import { HallTicketPDF } from '@/components/HallTicketPDF';
+import { toast } from '@/hooks/use-toast';
 
 // --- LIVE TICKER COMPONENT ---
 const LiveTicker = () => {
   return (
-    <div className="w-full bg-primary/10 border-y border-primary/20 overflow-hidden h-10 flex items-center">
+    <div className="w-full bg-primary/10 border-y border-primary/20 overflow-hidden h-10 flex items-center" data-testid="live-ticker">
       <div className="whitespace-nowrap animate-marquee flex gap-12 items-center px-4">
         {[
           "🚀 Hackathon 2025 Registrations open!",
@@ -65,7 +68,7 @@ const initialEdges = [
 
 const StudyMindMap = () => {
   return (
-    <div className="h-[400px] w-full rounded-xl border border-border bg-card/50 overflow-hidden">
+    <div className="h-[400px] w-full rounded-xl border border-border bg-card/50 overflow-hidden" data-testid="mind-map">
       <ReactFlow 
         nodes={initialNodes} 
         edges={initialEdges} 
@@ -107,7 +110,7 @@ const HallTicket = () => {
             <div className="grid grid-cols-2 gap-4 text-sm">
                <div>
                  <p className="text-slate-500">Student Name</p>
-                 <p className="font-bold text-lg">Alex Johnson</p>
+                 <p className="font-bold text-lg" data-testid="student-name">Alex Johnson</p>
                </div>
                <div>
                  <p className="text-slate-500">Roll Number</p>
@@ -163,7 +166,20 @@ const HallTicket = () => {
 
         {/* Footer */}
         <div className="bg-slate-50 p-4 border-t flex justify-between items-center text-sm text-slate-500 mt-auto">
-          <p>Generated on Dec 18, 2025</p>
+          <div className="flex gap-4">
+             {/* PDF DOWNLOAD BUTTON */}
+             <PDFDownloadLink
+                document={<HallTicketPDF studentName="Alex Johnson" rollNumber="CS-2025-042" dept="Computer Science" />}
+                fileName="hall-ticket-2025.pdf"
+             >
+                {({ blob, url, loading, error }) => (
+                  <Button size="sm" disabled={loading} data-testid="button-download-pdf">
+                    {loading ? <Loader2 className="w-3 h-3 animate-spin mr-2" /> : <Download className="w-3 h-3 mr-2" />}
+                    {loading ? 'Generating PDF...' : 'Download PDF'}
+                  </Button>
+                )}
+             </PDFDownloadLink>
+          </div>
           <div className="space-x-4">
             <span>Controller of Examinations</span>
             <span>Principal</span>
@@ -183,15 +199,19 @@ export default function StudentDashboard() {
         <LiveTicker />
       </div>
 
-      <div className="flex justify-between items-end">
+      <div className="flex flex-col md:flex-row justify-between items-end gap-4">
         <div>
           <h1 className="text-3xl font-bold mb-1">Welcome back, Alex</h1>
           <p className="text-muted-foreground">Here's your academic overview for today.</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 w-full md:w-auto">
            <Dialog>
             <DialogTrigger asChild>
-              <Button variant={examMode ? "destructive" : "default"} className={cn("gap-2 shadow-lg hover:shadow-primary/20", examMode && "animate-pulse")}>
+              <Button 
+                variant={examMode ? "destructive" : "default"} 
+                className={cn("gap-2 shadow-lg hover:shadow-primary/20 w-full md:w-auto", examMode && "animate-pulse")}
+                data-testid="button-hall-ticket"
+              >
                 <Download className="w-4 h-4" />
                 {examMode ? "Download Exam Hall Ticket" : "Get Hall Ticket"}
               </Button>
@@ -202,7 +222,7 @@ export default function StudentDashboard() {
       </div>
 
       {examMode && (
-         <div className="bg-red-500/10 border border-red-500/20 p-4 rounded-xl flex items-center gap-4 animate-in slide-in-from-top-4">
+         <div className="bg-red-500/10 border border-red-500/20 p-4 rounded-xl flex items-center gap-4 animate-in slide-in-from-top-4" data-testid="alert-exam-mode">
            <AlertCircle className="w-6 h-6 text-red-500" />
            <div>
              <h3 className="font-bold text-red-500">Examination Mode Active</h3>
@@ -228,7 +248,7 @@ export default function StudentDashboard() {
                   { time: '11:00 AM', subject: 'Software Engineering', room: 'Room 204', status: 'Upcoming' },
                   { time: '02:00 PM', subject: 'Machine Learning', room: 'Lab 1', status: 'Upcoming' },
                 ].map((item, i) => (
-                  <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
+                  <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-white/5 border border-white/5 hover:bg-white/10 transition-colors" data-testid={`schedule-item-${i}`}>
                     <div className="flex items-center gap-4">
                       <div className="text-sm font-mono text-muted-foreground">{item.time}</div>
                       <div className="w-px h-8 bg-border" />
