@@ -272,6 +272,54 @@ export async function registerRoutes(
     }
   });
 
+  // =================== SYLLABUS PARSING API ===================
+  
+  app.post("/api/syllabus/parse", async (req, res) => {
+    try {
+      const { text } = req.body;
+      if (!text || typeof text !== 'string') {
+        return res.status(400).json({ error: "Text content is required" });
+      }
+
+      // Parse syllabus text to extract topics
+      const lines = text.split('\n').filter(line => line.trim().length > 0);
+      const nodes: any[] = [];
+      const edges: any[] = [];
+
+      // Subject (main node)
+      const subject = lines[0] || 'Course';
+      const subjectId = 'subject-main';
+      nodes.push({ id: subjectId, label: subject, type: 'subject' });
+
+      let unitCounter = 0;
+      let currentUnitId = '';
+
+      // Parse topics and units
+      for (let i = 1; i < lines.length; i++) {
+        const line = lines[i].trim();
+        const indent = lines[i].search(/\S/);
+
+        // Unit (starts with number or "Unit")
+        if (line.match(/^(Unit|MODULE|Chapter|UNIT)\s+\d+/i) || (indent <= 2 && line.length > 0)) {
+          currentUnitId = `unit-${unitCounter++}`;
+          nodes.push({ id: currentUnitId, label: line.substring(0, 30), type: 'unit' });
+          edges.push({ id: `e-${subjectId}-${currentUnitId}`, source: subjectId, target: currentUnitId });
+        } 
+        // Topic (indented further)
+        else if (indent > 2 && line.length > 0 && currentUnitId) {
+          const topicId = `topic-${i}`;
+          nodes.push({ id: topicId, label: line.substring(0, 25), type: 'topic' });
+          edges.push({ id: `e-${currentUnitId}-${topicId}`, source: currentUnitId, target: topicId });
+        }
+      }
+
+      res.json({ nodes, edges, subject });
+    } catch (error) {
+      console.error("Error parsing syllabus:", error);
+      res.status(500).json({ error: "Failed to parse syllabus" });
+    }
+  });
+
   // =================== TICKET VERIFICATION API ===================
   
   app.post("/api/tickets/verify", async (req, res) => {

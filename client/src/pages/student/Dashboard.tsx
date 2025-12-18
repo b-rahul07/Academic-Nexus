@@ -14,6 +14,7 @@ import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import { PDFDownloadLink } from '@react-pdf/renderer';
 import { HallTicketPDF } from '@/components/HallTicketPDF';
+import { StudySupport } from '@/components/StudySupport';
 import { toast } from '@/hooks/use-toast';
 
 // --- LIVE TICKER COMPONENT ---
@@ -281,21 +282,12 @@ export default function StudentDashboard() {
             </CardContent>
           </Card>
 
-          <Card className="glass-card">
-             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <BookOpen className="w-5 h-5 text-primary" /> Study Support & Mind Map
-              </CardTitle>
-              <CardDescription>Generated from your syllabus PDF</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <StudyMindMap />
-              <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-2">
-                 <Button variant="outline" size="sm" className="text-xs"><ExternalLink className="w-3 h-3 mr-2"/>View Source</Button>
-                 <Button variant="outline" size="sm" className="text-xs"><Download className="w-3 h-3 mr-2"/>Download Map</Button>
-              </div>
-            </CardContent>
-          </Card>
+        </div>
+      </div>
+
+      {/* Study Support Module */}
+      <div className="mt-6">
+        <StudySupport />
         </div>
 
         {/* Right Col */}
