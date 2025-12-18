@@ -8,6 +8,9 @@ import { ReactFlow, Background, Controls, Handle, Position, MarkerType } from 'r
 import 'reactflow/dist/style.css';
 import { Upload, Loader2, BookOpen, ExternalLink } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
+import * as pdfjsLib from 'pdfjs-dist';
+
+pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
 
 interface SyllabusNode {
   id: string;
@@ -93,7 +96,21 @@ export function StudySupport() {
 
     setIsUploading(true);
     try {
-      const text = await file.text();
+      let text = '';
+      
+      if (file.type === 'application/pdf') {
+        const arrayBuffer = await file.arrayBuffer();
+        const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
+        
+        for (let i = 1; i <= Math.min(pdf.numPages, 10); i++) {
+          const page = await pdf.getPage(i);
+          const textContent = await page.getTextContent();
+          text += textContent.items.map((item: any) => item.str).join(' ') + '\n';
+        }
+      } else {
+        text = await file.text();
+      }
+      
       setUploadedText(text);
       setSelectedFile(file);
     } catch (error) {
