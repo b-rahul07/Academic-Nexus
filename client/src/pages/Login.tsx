@@ -83,31 +83,31 @@ export default function Login() {
             <button
               key={role.id}
               onClick={() => handleLogin(role.id, role.path)}
-              className="group relative overflow-hidden rounded-xl border border-white/10 bg-white/5 p-4 transition-all hover:bg-white/10 hover:border-white/20 hover:shadow-2xl hover:shadow-primary/5 text-left"
+              className="group relative overflow-hidden rounded-2xl border border-purple-500/30 bg-white/10 backdrop-blur-md p-4 transition-all hover:bg-white/20 hover:border-purple-400/60 hover:shadow-[0_0_30px_rgba(168,85,247,0.4)] text-left"
               disabled={!!loading}
               data-testid={`button-login-${role.id}`}
             >
-              <div className={`absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b ${role.color} opacity-0 transition-opacity group-hover:opacity-100`} />
+              <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-purple-500 via-cyan-500 to-purple-500 opacity-0 group-hover:opacity-100 transition-opacity" />
               
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <div className={`p-3 rounded-lg bg-gradient-to-br ${role.color} bg-opacity-10 text-white shadow-inner`}>
+                  <div className="p-3 rounded-xl bg-gradient-to-br from-purple-500/20 to-cyan-500/20 text-purple-400 shadow-inner">
                     <role.icon className="w-6 h-6" />
                   </div>
                   <div>
-                    <h3 className="font-display font-semibold text-lg text-foreground group-hover:text-white transition-colors">
+                    <h3 className="font-display font-bold text-lg text-white group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-purple-400 group-hover:to-cyan-400 transition-all">
                       {role.label}
                     </h3>
-                    <p className="text-sm text-muted-foreground group-hover:text-gray-300">
+                    <p className="text-sm text-gray-400 group-hover:text-cyan-300 transition-colors">
                       Access dashboard
                     </p>
                   </div>
                 </div>
                 
-                <ArrowRight className={`w-5 h-5 text-muted-foreground transition-transform group-hover:translate-x-1 group-hover:text-white ${loading === role.id ? 'opacity-0' : 'opacity-100'}`} />
+                <ArrowRight className={`w-5 h-5 text-purple-400 transition-all group-hover:translate-x-1 group-hover:drop-shadow-[0_0_8px_rgba(168,85,247,0.8)] ${loading === role.id ? 'opacity-0' : 'opacity-100'}`} />
                 
                 {loading === role.id && (
-                  <div className="absolute right-6 animate-spin h-5 w-5 border-2 border-white/30 border-t-white rounded-full" />
+                  <div className="absolute right-6 animate-spin h-5 w-5 border-2 border-purple-400/30 border-t-purple-400 rounded-full" />
                 )}
               </div>
             </button>
@@ -130,13 +130,13 @@ export default function Login() {
             </div>
 
             {showDevMode ? (
-              <div className="space-y-2 p-3 rounded-lg bg-white/5 border border-white/10">
+              <div className="space-y-2 p-3 rounded-2xl bg-white/10 backdrop-blur-md border border-purple-500/30">
                 <Button 
                   size="sm" 
                   variant="outline" 
                   onClick={() => handleDevLogin('admin', '/admin', 'Super Admin')}
                   disabled={!!loading}
-                  className="w-full justify-start gap-2"
+                  className="w-full justify-start gap-2 bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-cyan-500 border-none text-white hover:shadow-[0_0_20px_rgba(168,85,247,0.6)]"
                   data-testid="button-dev-super-admin"
                 >
                   <Shield className="w-3 h-3" />
@@ -147,7 +147,7 @@ export default function Login() {
                   variant="outline" 
                   onClick={() => handleDevLogin('student', '/student', 'Rahul (Exam Tomorrow)')}
                   disabled={!!loading}
-                  className="w-full justify-start gap-2"
+                  className="w-full justify-start gap-2 bg-gradient-to-r from-cyan-600 to-cyan-500 hover:from-cyan-500 hover:to-purple-500 border-none text-white hover:shadow-[0_0_20px_rgba(34,211,238,0.6)]"
                   data-testid="button-dev-student-rahul"
                 >
                   <GraduationCap className="w-3 h-3" />
@@ -158,7 +158,7 @@ export default function Login() {
                   variant="outline" 
                   onClick={() => handleDevLogin('club_coordinator', '/club', 'Club Coordinator')}
                   disabled={!!loading}
-                  className="w-full justify-start gap-2"
+                  className="w-full justify-start gap-2 bg-gradient-to-r from-purple-500 to-cyan-500 hover:from-cyan-500 hover:to-purple-600 border-none text-white hover:shadow-[0_0_20px_rgba(168,85,247,0.6)]"
                   data-testid="button-dev-club-coordinator"
                 >
                   <PartyPopper className="w-3 h-3" />
@@ -172,6 +172,7 @@ export default function Login() {
                   variant="outline" 
                   onClick={() => handleDevLogin('student', '/student', 'Demo Student')}
                   disabled={!!loading}
+                  className="bg-gradient-to-r from-purple-600 to-cyan-500 hover:from-purple-500 hover:to-cyan-400 border-none text-white hover:shadow-[0_0_15px_rgba(168,85,247,0.5)]"
                   data-testid="button-demo-student"
                 >
                   Demo Student
@@ -181,6 +182,7 @@ export default function Login() {
                   variant="outline" 
                   onClick={() => handleDevLogin('admin', '/admin', 'Demo Admin')}
                   disabled={!!loading}
+                  className="bg-gradient-to-r from-cyan-600 to-purple-500 hover:from-cyan-500 hover:to-purple-600 border-none text-white hover:shadow-[0_0_15px_rgba(34,211,238,0.5)]"
                   data-testid="button-demo-admin"
                 >
                   Demo Admin
@@ -190,6 +192,7 @@ export default function Login() {
                   variant="outline" 
                   onClick={() => handleDevLogin('seating_manager', '/seating', 'Demo Manager')}
                   disabled={!!loading}
+                  className="bg-gradient-to-r from-purple-600 to-cyan-500 hover:from-purple-500 hover:to-cyan-400 border-none text-white hover:shadow-[0_0_15px_rgba(168,85,247,0.5)]"
                   data-testid="button-demo-manager"
                 >
                   Demo Manager
