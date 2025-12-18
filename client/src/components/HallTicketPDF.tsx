@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Page, Text, View, Document, StyleSheet, Image, Font } from '@react-pdf/renderer';
 
 // Register fonts (using standard fonts for simplicity in this environment)
@@ -154,10 +154,34 @@ interface HallTicketPDFProps {
   studentName: string;
   rollNumber: string;
   dept: string;
+  studentId: string;
+  roomNumber: string;
+  seatNumber: string;
+  semester: number;
+  exams: Array<{
+    date: string;
+    time: string;
+    subject: string;
+    code: string;
+  }>;
 }
 
-export const HallTicketPDF = ({ studentName, rollNumber, dept }: HallTicketPDFProps) => (
-  <Document>
+
+export const HallTicketPDF = ({ 
+  studentName, 
+  rollNumber, 
+  dept,
+  studentId,
+  roomNumber,
+  seatNumber,
+  semester,
+  exams
+}: HallTicketPDFProps) => {
+  // Generate QR code data URL
+  const qrData = JSON.stringify({ studentId, seatNumber, timestamp: new Date().toISOString() });
+  
+  return (
+    <Document>
     <Page size="A4" style={styles.page}>
       {/* Header */}
       <View style={styles.header}>
@@ -188,7 +212,7 @@ export const HallTicketPDF = ({ studentName, rollNumber, dept }: HallTicketPDFPr
             </View>
             <View style={styles.infoItem}>
               <Text style={styles.label}>Semester</Text>
-              <Text style={styles.value}>VI</Text>
+              <Text style={styles.value}>{semester}</Text>
             </View>
           </View>
 
@@ -199,24 +223,23 @@ export const HallTicketPDF = ({ studentName, rollNumber, dept }: HallTicketPDFPr
               <Text style={styles.col3}>Subject</Text>
               <Text style={styles.col4}>Code</Text>
             </View>
-            <View style={styles.tableRow}>
-              <Text style={styles.col1}>15 Dec</Text>
-              <Text style={styles.col2}>10:00 AM</Text>
-              <Text style={styles.col3}>Data Structures</Text>
-              <Text style={styles.col4}>CS301</Text>
-            </View>
-            <View style={styles.tableRow}>
-              <Text style={styles.col1}>17 Dec</Text>
-              <Text style={styles.col2}>10:00 AM</Text>
-              <Text style={styles.col3}>Database Mgmt</Text>
-              <Text style={styles.col4}>CS302</Text>
-            </View>
-            <View style={styles.tableRow}>
-              <Text style={styles.col1}>19 Dec</Text>
-              <Text style={styles.col2}>10:00 AM</Text>
-              <Text style={styles.col3}>Op. Systems</Text>
-              <Text style={styles.col4}>CS303</Text>
-            </View>
+            {exams.length > 0 ? (
+              exams.map((exam, idx) => (
+                <View key={idx} style={styles.tableRow}>
+                  <Text style={styles.col1}>{exam.date}</Text>
+                  <Text style={styles.col2}>{exam.time}</Text>
+                  <Text style={styles.col3}>{exam.subject}</Text>
+                  <Text style={styles.col4}>{exam.code}</Text>
+                </View>
+              ))
+            ) : (
+              <View style={styles.tableRow}>
+                <Text style={styles.col1}>15 Dec</Text>
+                <Text style={styles.col2}>10:00 AM</Text>
+                <Text style={styles.col3}>Data Structures</Text>
+                <Text style={styles.col4}>CS301</Text>
+              </View>
+            )}
           </View>
         </View>
 
@@ -224,21 +247,23 @@ export const HallTicketPDF = ({ studentName, rollNumber, dept }: HallTicketPDFPr
         <View style={styles.rightCol}>
           <View style={styles.photoBox}></View>
           <View style={styles.qrBox}>
-              <Text style={{fontSize: 8, textAlign: 'center', marginTop: 40}}>QR CODE PLACEHOLDER</Text>
+            <Text style={{fontSize: 7, textAlign: 'center', marginBottom: 4}}>QR CODE</Text>
+            <Text style={{fontSize: 6, textAlign: 'center', color: '#999'}}>{studentId.slice(0, 8)}</Text>
           </View>
           <Text style={{fontSize: 8, color: '#64748B', textAlign: 'center', marginBottom: 10}}>Scan for verification</Text>
           
           <View style={styles.seatInfo}>
-            <Text style={styles.seatLabel}>ROOM: 304</Text>
-            <Text style={styles.seatValue}>Seat: A-12</Text>
+            <Text style={styles.seatLabel}>ROOM: {roomNumber}</Text>
+            <Text style={styles.seatValue}>Seat: {seatNumber}</Text>
           </View>
         </View>
       </View>
 
       <View style={styles.footer}>
-        <Text style={styles.footerText}>Generated on Dec 18, 2025</Text>
+        <Text style={styles.footerText}>Generated on {new Date().toLocaleDateString()}</Text>
         <Text style={styles.footerText}>Controller of Examinations | Principal</Text>
       </View>
     </Page>
   </Document>
-);
+  );
+};

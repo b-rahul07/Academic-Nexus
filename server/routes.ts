@@ -272,5 +272,41 @@ export async function registerRoutes(
     }
   });
 
+  // =================== TICKET VERIFICATION API ===================
+  
+  app.post("/api/tickets/verify", async (req, res) => {
+    try {
+      const { studentId, seatNumber } = req.body;
+      
+      if (!studentId || !seatNumber) {
+        return res.status(400).json({ error: "studentId and seatNumber are required" });
+      }
+
+      // Verify ticket against database
+      const seatings = await storage.getSeatingsForStudent(studentId);
+      const seating = seatings.find((s) => {
+        return s.row !== null && s.column !== null && `${s.row}-${s.column}` === seatNumber;
+      });
+
+      if (seating) {
+        res.json({
+          valid: true,
+          data: {
+            studentId,
+            seatNumber,
+          },
+        });
+      } else {
+        res.status(404).json({
+          valid: false,
+          error: "Ticket not found or invalid",
+        });
+      }
+    } catch (error) {
+      console.error("Error verifying ticket:", error);
+      res.status(500).json({ error: "Failed to verify ticket" });
+    }
+  });
+
   return httpServer;
 }

@@ -5,8 +5,10 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
 import { Users, Calendar, AlertTriangle, ShieldCheck, FileText, TrendingUp, CheckCircle } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useExamMode } from '@/hooks/useExamMode';
 import { useEvents } from '@/hooks/useEvents';
+import { TicketVerifier } from '@/components/TicketVerifier';
 
 const data = [
   { name: 'Jan', events: 4, exams: 2 },
@@ -109,8 +111,16 @@ export default function AdminDashboard() {
         </Card>
       </div>
 
-      {/* Charts Row */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {/* Tabs for different admin functions */}
+      <Tabs defaultValue="overview" className="w-full">
+        <TabsList>
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="tickets">Ticket Verification</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="overview">
+          {/* Charts Row */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card className="glass-card">
           <CardHeader>
             <CardTitle>Activity Overview</CardTitle>
@@ -162,7 +172,15 @@ export default function AdminDashboard() {
             </div>
           </CardContent>
         </Card>
-      </div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="tickets">
+          <div className="grid grid-cols-1 gap-6">
+            <TicketVerifier />
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

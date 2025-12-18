@@ -169,7 +169,20 @@ const HallTicket = () => {
           <div className="flex gap-4">
              {/* PDF DOWNLOAD BUTTON */}
              <PDFDownloadLink
-                document={<HallTicketPDF studentName="Alex Johnson" rollNumber="CS-2025-042" dept="Computer Science" />}
+                document={<HallTicketPDF 
+                  studentName="Alex Johnson" 
+                  rollNumber="CS-2025-042" 
+                  dept="Computer Science"
+                  studentId="student-001"
+                  roomNumber="304"
+                  seatNumber="A-12"
+                  semester={6}
+                  exams={[
+                    { date: "15 Dec", time: "10:00 AM", subject: "Data Structures", code: "CS301" },
+                    { date: "17 Dec", time: "10:00 AM", subject: "Database Mgmt", code: "CS302" },
+                    { date: "19 Dec", time: "10:00 AM", subject: "Op. Systems", code: "CS303" }
+                  ]}
+                />}
                 fileName="hall-ticket-2025.pdf"
              >
                 {({ blob, url, loading, error }) => (
