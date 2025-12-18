@@ -283,12 +283,6 @@ export default function StudentDashboard() {
           </Card>
 
         </div>
-      </div>
-
-      {/* Study Support Module */}
-      <div className="mt-6">
-        <StudySupport />
-        </div>
 
         {/* Right Col */}
         <div className="space-y-6">
@@ -335,6 +329,11 @@ export default function StudentDashboard() {
             </CardContent>
           </Card>
         </div>
+      </div>
+
+      {/* Study Support Module */}
+      <div className="mt-6">
+        <StudySupport />
       </div>
     </div>
   );
