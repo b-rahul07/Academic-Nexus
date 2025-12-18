@@ -41,6 +41,7 @@ export interface IStorage {
   getUserByIdentifier(identifier: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   getUsersByRole(role: string): Promise<User[]>;
+  getAllUsers(): Promise<User[]>;
   updateUser(id: string, updates: Partial<InsertUser>): Promise<User | undefined>;
   
   // Events
@@ -103,6 +104,10 @@ export class DatabaseStorage implements IStorage {
 
   async getUsersByRole(role: string): Promise<User[]> {
     return await db.select().from(users).where(eq(users.role, role));
+  }
+
+  async getAllUsers(): Promise<User[]> {
+    return await db.select().from(users);
   }
 
   async updateUser(id: string, updates: Partial<InsertUser>): Promise<User | undefined> {

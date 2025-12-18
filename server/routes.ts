@@ -417,5 +417,143 @@ export async function registerRoutes(
     }
   });
 
+  // =================== USER MANAGEMENT API ===================
+  
+  app.get("/api/users", async (req, res) => {
+    try {
+      const allUsers = await storage.getAllUsers();
+      res.json(allUsers);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      res.status(500).json({ error: "Failed to fetch users" });
+    }
+  });
+
+  app.post("/api/users/register/student", async (req, res) => {
+    try {
+      const { name, identifier, department, year, dob } = req.body;
+      
+      if (!name || !identifier || !department || !dob) {
+        return res.status(400).json({ error: "All fields are required" });
+      }
+
+      const existing = await storage.getUserByIdentifier(identifier);
+      if (existing) {
+        return res.status(409).json({ error: "Roll number already exists" });
+      }
+
+      const passwordHash = hashPassword(dob);
+      
+      const user = await storage.createUser({
+        role: "Student",
+        identifier,
+        dob,
+        password_hash: passwordHash,
+        is_first_login: true,
+        name,
+        department,
+        year,
+      });
+
+      res.status(201).json(user);
+    } catch (error) {
+      console.error("Error registering student:", error);
+      res.status(500).json({ error: "Failed to register student" });
+    }
+  });
+
+  app.post("/api/users/register/seating-manager", async (req, res) => {
+    try {
+      const { name, identifier, dob } = req.body;
+      
+      if (!name || !identifier || !dob) {
+        return res.status(400).json({ error: "All fields are required" });
+      }
+
+      const existing = await storage.getUserByIdentifier(identifier);
+      if (existing) {
+        return res.status(409).json({ error: "Faculty ID already exists" });
+      }
+
+      const passwordHash = hashPassword(dob);
+      
+      const user = await storage.createUser({
+        role: "SeatingManager",
+        identifier,
+        dob,
+        password_hash: passwordHash,
+        is_first_login: true,
+        name,
+      });
+
+      res.status(201).json(user);
+    } catch (error) {
+      console.error("Error registering seating manager:", error);
+      res.status(500).json({ error: "Failed to register seating manager" });
+    }
+  });
+
+  app.post("/api/users/register/club-coordinator", async (req, res) => {
+    try {
+      const { name, identifier, clubName, dob } = req.body;
+      
+      if (!name || !identifier || !clubName || !dob) {
+        return res.status(400).json({ error: "All fields are required" });
+      }
+
+      const existing = await storage.getUserByIdentifier(identifier);
+      if (existing) {
+        return res.status(409).json({ error: "Student ID already exists" });
+      }
+
+      const passwordHash = hashPassword(dob);
+      
+      const user = await storage.createUser({
+        role: "ClubCoordinator",
+        identifier,
+        dob,
+        password_hash: passwordHash,
+        is_first_login: true,
+        name,
+        club_name: clubName,
+      });
+
+      res.status(201).json(user);
+    } catch (error) {
+      console.error("Error registering club coordinator:", error);
+      res.status(500).json({ error: "Failed to register club coordinator" });
+    }
+  });
+
+  app.post("/api/users/reset-password", async (req, res) => {
+    try {
+      const { userId } = req.body;
+      
+      if (!userId) {
+        return res.status(400).json({ error: "userId is required" });
+      }
+
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      const passwordHash = hashPassword(user.dob);
+      
+      const updatedUser = await storage.updateUser(userId, {
+        password_hash: passwordHash,
+        is_first_login: true,
+      });
+
+      res.json(updatedUser);
+    } catch (error) {
+      console.error("Error resetting password:", error);
+      res.status(500).json({ error: "Failed to reset password" });
+    }
+  });
+
   return httpServer;
 }
+
+  // =================== USER MANAGEMENT API ===================
+  

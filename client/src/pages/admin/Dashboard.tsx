@@ -10,6 +10,7 @@ import { useExamMode } from '@/hooks/useExamMode';
 import { useEvents } from '@/hooks/useEvents';
 import { useToast } from '@/hooks/use-toast';
 import { TicketVerifier } from '@/components/TicketVerifier';
+import { UserManagement } from './UserManagement';
 import { motion } from 'framer-motion';
 
 const data = [
@@ -147,6 +148,7 @@ export default function AdminDashboard() {
       <Tabs defaultValue="overview" className="w-full">
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="users">User Management</TabsTrigger>
           <TabsTrigger value="tickets">Ticket Verification</TabsTrigger>
         </TabsList>
 
@@ -205,6 +207,10 @@ export default function AdminDashboard() {
           </CardContent>
         </Card>
           </div>
+        </TabsContent>
+
+        <TabsContent value="users">
+          <UserManagement />
         </TabsContent>
 
         <TabsContent value="tickets">

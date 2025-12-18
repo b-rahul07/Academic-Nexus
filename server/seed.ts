@@ -13,6 +13,7 @@ async function seed() {
   
   try {
     await storage.createUser({
+      name: "System Admin",
       role: "Admin",
       identifier: "admin",
       dob: "01011990", // Placeholder DDMMYYYY
