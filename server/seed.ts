@@ -34,6 +34,23 @@ async function seed() {
     }
   }
 
+  // Create rooms
+  const roomsData = [
+    { roomNumber: "Main Hall", capacity: 300, rows: 20, columns: 15, building: "Central" },
+    { roomNumber: "Lab 1", capacity: 60, rows: 6, columns: 10, building: "Tech Block" },
+    { roomNumber: "Room 204", capacity: 40, rows: 5, columns: 8, building: "Academic" },
+    { roomNumber: "Lab 2", capacity: 50, rows: 5, columns: 10, building: "Tech Block" },
+  ];
+
+  for (const room of roomsData) {
+    try {
+      await storage.createRoom(room);
+      console.log(`✓ Created room: ${room.roomNumber}`);
+    } catch (error) {
+      console.log(`  Room ${room.roomNumber} may already exist`);
+    }
+  }
+
   // Create mock exams
   const examsData = [
     { subjectName: "Data Structures", subjectCode: "CS301", examDate: "2025-12-15", startTime: "10:00 AM", endTime: "01:00 PM", semester: 6, department: "Computer Science" },
@@ -74,24 +91,3 @@ seed().catch((error) => {
   console.error("Error seeding database:", error);
   process.exit(1);
 });
-
-// Seed rooms
-const roomsData = [
-  { roomNumber: "Main Hall", capacity: 300, rows: 20, columns: 15, building: "Central" },
-  { roomNumber: "Lab 1", capacity: 60, rows: 6, columns: 10, building: "Tech Block" },
-  { roomNumber: "Room 204", capacity: 40, rows: 5, columns: 8, building: "Academic" },
-  { roomNumber: "Lab 2", capacity: 50, rows: 5, columns: 10, building: "Tech Block" },
-];
-
-async function seedRooms() {
-  for (const room of roomsData) {
-    try {
-      await storage.createRoom(room);
-      console.log(`✓ Created room: ${room.roomNumber}`);
-    } catch (error) {
-      console.log(`  Room ${room.roomNumber} may already exist`);
-    }
-  }
-}
-
-seedRooms().catch(console.error);

@@ -206,7 +206,7 @@ export async function registerRoutes(
         .map(() => Array(room.columns).fill(null));
 
       seatings.forEach((seating) => {
-        const student = studentMap.get(seating.studentId);
+        const student = seating.studentId ? studentMap.get(seating.studentId) : null;
         grid[seating.row][seating.column] = {
           studentId: student?.id ?? "UNKNOWN",
           studentName: student?.name ?? "UNKNOWN",
