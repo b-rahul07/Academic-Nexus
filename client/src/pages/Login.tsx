@@ -19,10 +19,10 @@ export default function Login() {
   const [selectedRole, setSelectedRole] = useState<string | null>(null);
 
   const roles = [
-    { id: 'Student', label: 'Student Portal', icon: GraduationCap, path: '/student', color: 'from-blue-500 to-cyan-500' },
-    { id: 'Admin', label: 'Administrator', icon: Shield, path: '/admin', color: 'from-purple-500 to-pink-500' },
-    { id: 'SeatingManager', label: 'Seating Manager', icon: Users, path: '/seating', color: 'from-emerald-500 to-teal-500' },
-    { id: 'ClubCoordinator', label: 'Club Coordinator', icon: PartyPopper, path: '/club', color: 'from-orange-500 to-red-500' },
+    { id: 'student', label: 'Student Portal', icon: GraduationCap, path: '/student/dashboard', color: 'from-blue-500 to-cyan-500' },
+    { id: 'admin', label: 'Administrator', icon: Shield, path: '/admin/dashboard', color: 'from-purple-500 to-pink-500' },
+    { id: 'seating_manager', label: 'Seating Manager', icon: Users, path: '/seating/dashboard', color: 'from-emerald-500 to-teal-500' },
+    { id: 'club_coordinator', label: 'Club Coordinator', icon: PartyPopper, path: '/club/dashboard', color: 'from-orange-500 to-red-500' },
   ];
 
   const handleRoleSelect = (role: string) => {
@@ -70,10 +70,10 @@ export default function Login() {
         setLocation('/change-password');
       } else {
         const roleMap: Record<string, string> = {
-          'Student': '/student',
-          'Admin': '/admin',
-          'SeatingManager': '/seating',
-          'ClubCoordinator': '/club',
+          'student': '/student/dashboard',
+          'admin': '/admin/dashboard',
+          'seating_manager': '/seating/dashboard',
+          'club_coordinator': '/club/dashboard',
         };
         setLocation(roleMap[data.role] || '/');
       }

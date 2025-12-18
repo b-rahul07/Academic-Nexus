@@ -62,10 +62,10 @@ export default function ChangePassword() {
       });
 
       const roleMap: Record<string, string> = {
-        'Student': '/student',
-        'Admin': '/admin',
-        'SeatingManager': '/seating',
-        'ClubCoordinator': '/club',
+        'student': '/student/dashboard',
+        'admin': '/admin/dashboard',
+        'seating_manager': '/seating/dashboard',
+        'club_coordinator': '/club/dashboard',
       };
 
       const redirectPath = roleMap[userRole as string] || '/';

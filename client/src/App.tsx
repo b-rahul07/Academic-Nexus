@@ -31,35 +31,35 @@ function Router() {
       <Route path="/change-password" component={ChangePassword} />
       
       {/* Student Routes */}
-      <Route path="/student">
-        <ProtectedRoute component={StudentDashboard} role="Student" />
+      <Route path="/student/dashboard">
+        <ProtectedRoute component={StudentDashboard} role="student" />
       </Route>
       <Route path="/student/*">
-        <ProtectedRoute component={StudentDashboard} role="Student" />
+        <ProtectedRoute component={StudentDashboard} role="student" />
       </Route>
 
       {/* Admin Routes */}
-      <Route path="/admin">
-        <ProtectedRoute component={AdminDashboard} role="Admin" />
+      <Route path="/admin/dashboard">
+        <ProtectedRoute component={AdminDashboard} role="admin" />
       </Route>
        <Route path="/admin/*">
-        <ProtectedRoute component={AdminDashboard} role="Admin" />
+        <ProtectedRoute component={AdminDashboard} role="admin" />
       </Route>
 
       {/* Seating Routes */}
-      <Route path="/seating">
-        <ProtectedRoute component={SeatingDashboard} role="SeatingManager" />
+      <Route path="/seating/dashboard">
+        <ProtectedRoute component={SeatingDashboard} role="seating_manager" />
       </Route>
        <Route path="/seating/*">
-        <ProtectedRoute component={SeatingDashboard} role="SeatingManager" />
+        <ProtectedRoute component={SeatingDashboard} role="seating_manager" />
       </Route>
 
       {/* Club Routes */}
-      <Route path="/club">
-        <ProtectedRoute component={ClubDashboard} role="ClubCoordinator" />
+      <Route path="/club/dashboard">
+        <ProtectedRoute component={ClubDashboard} role="club_coordinator" />
       </Route>
        <Route path="/club/*">
-        <ProtectedRoute component={ClubDashboard} role="ClubCoordinator" />
+        <ProtectedRoute component={ClubDashboard} role="club_coordinator" />
       </Route>
 
       <Route component={NotFound} />

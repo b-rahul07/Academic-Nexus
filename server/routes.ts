@@ -6,10 +6,6 @@ import { allocateSeatingWithConstraints } from "./seatingAlgorithm";
 import { z } from "zod";
 import crypto from "crypto";
 
-function hashPassword(password: string): string {
-  return crypto.createHash("sha256").update(password).digest("hex");
-}
-
 export async function registerRoutes(
   httpServer: Server,
   app: Express
@@ -31,9 +27,8 @@ export async function registerRoutes(
         return res.status(401).json({ error: "Invalid credentials" });
       }
 
-      const passwordHash = hashPassword(password);
-      
-      if (user.password_hash !== passwordHash) {
+      // Direct string comparison - no hashing
+      if (user.password_hash !== password) {
         return res.status(401).json({ error: "Invalid credentials" });
       }
 
@@ -63,10 +58,9 @@ export async function registerRoutes(
         return res.status(404).json({ error: "User not found" });
       }
 
-      const passwordHash = hashPassword(newPassword);
-      
+      // Store password as-is, no hashing
       const updatedUser = await storage.updateUser(userId, {
-        password_hash: passwordHash,
+        password_hash: newPassword,
         is_first_login: false,
       });
 
@@ -442,13 +436,11 @@ export async function registerRoutes(
         return res.status(409).json({ error: "Roll number already exists" });
       }
 
-      const passwordHash = hashPassword(dob);
-      
       const user = await storage.createUser({
-        role: "Student",
+        role: "student",
         identifier,
         dob,
-        password_hash: passwordHash,
+        password_hash: dob,
         is_first_login: true,
         name,
         department,
@@ -475,13 +467,11 @@ export async function registerRoutes(
         return res.status(409).json({ error: "Faculty ID already exists" });
       }
 
-      const passwordHash = hashPassword(dob);
-      
       const user = await storage.createUser({
-        role: "SeatingManager",
+        role: "seating_manager",
         identifier,
         dob,
-        password_hash: passwordHash,
+        password_hash: dob,
         is_first_login: true,
         name,
       });
@@ -506,13 +496,11 @@ export async function registerRoutes(
         return res.status(409).json({ error: "Student ID already exists" });
       }
 
-      const passwordHash = hashPassword(dob);
-      
       const user = await storage.createUser({
-        role: "ClubCoordinator",
+        role: "club_coordinator",
         identifier,
         dob,
-        password_hash: passwordHash,
+        password_hash: dob,
         is_first_login: true,
         name,
         club_name: clubName,
@@ -538,10 +526,8 @@ export async function registerRoutes(
         return res.status(404).json({ error: "User not found" });
       }
 
-      const passwordHash = hashPassword(user.dob);
-      
       const updatedUser = await storage.updateUser(userId, {
-        password_hash: passwordHash,
+        password_hash: user.dob,
         is_first_login: true,
       });
 
