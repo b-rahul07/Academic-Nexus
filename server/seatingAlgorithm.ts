@@ -2,11 +2,11 @@ import type { User, Room, Seating } from "@shared/schema";
 
 interface GridCell {
   studentId: string | null;
-  department: string | null;
+  role: string | null;
 }
 
 /**
- * Smart seating algorithm that ensures no two students from the same department
+ * Smart seating algorithm that ensures no two students from the same role
  * sit next to each other (horizontally or vertically, NOT diagonally)
  */
 export function allocateSeatingWithConstraints(
@@ -21,31 +21,31 @@ export function allocateSeatingWithConstraints(
     .map(() =>
       Array(columns)
         .fill(null)
-        .map(() => ({ studentId: null, department: null }))
+        .map(() => ({ studentId: null, role: null }))
     );
 
-  // Group students by department
-  const byDept = students.reduce(
+  // Group students by role
+  const byRole = students.reduce(
     (acc, student) => {
-      const dept = student.department || "UNKNOWN";
-      if (!acc[dept]) acc[dept] = [];
-      acc[dept].push(student);
+      const role = student.role || "UNKNOWN";
+      if (!acc[role]) acc[role] = [];
+      acc[role].push(student);
       return acc;
     },
     {} as Record<string, User[]>
   );
 
-  // Shuffle each department
-  Object.values(byDept).forEach((group) => {
+  // Shuffle each role
+  Object.values(byRole).forEach((group) => {
     for (let i = group.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [group[i], group[j]] = [group[j], group[i]];
     }
   });
 
-  const depts = Object.keys(byDept);
-  const iterators = depts.map((d) => byDept[d][Symbol.iterator]());
-  let currentDeptIdx = 0;
+  const roles = Object.keys(byRole);
+  const iterators = roles.map((r) => byRole[r][Symbol.iterator]());
+  let currentRoleIdx = 0;
 
   // Fill grid using round-robin with conflict checking
   for (let row = 0; row < rows; row++) {
@@ -53,23 +53,23 @@ export function allocateSeatingWithConstraints(
       let placed = false;
       let attempts = 0;
 
-      while (!placed && attempts < depts.length) {
-        const dept = depts[currentDeptIdx];
-        const iterator = iterators[currentDeptIdx];
+      while (!placed && attempts < roles.length) {
+        const role = roles[currentRoleIdx];
+        const iterator = iterators[currentRoleIdx];
         const student = iterator.next().value;
 
-        if (student && !hasAdjacentDept(grid, row, col, dept)) {
-          grid[row][col] = { studentId: student.id, department: dept };
+        if (student && !hasAdjacentRole(grid, row, col, role)) {
+          grid[row][col] = { studentId: student.id, role: role };
           placed = true;
         }
 
-        currentDeptIdx = (currentDeptIdx + 1) % depts.length;
+        currentRoleIdx = (currentRoleIdx + 1) % roles.length;
         attempts++;
 
-        if (attempts === depts.length && !placed) {
+        if (attempts === roles.length && !placed) {
           // If we can't place due to constraints, relax and place anyway
           if (student) {
-            grid[row][col] = { studentId: student.id, department: dept };
+            grid[row][col] = { studentId: student.id, role: role };
             placed = true;
           }
         }
@@ -99,23 +99,23 @@ export function allocateSeatingWithConstraints(
 }
 
 /**
- * Check if placing a student from a department at (row, col) violates adjacency constraint
+ * Check if placing a student from a role at (row, col) violates adjacency constraint
  */
-function hasAdjacentDept(
+function hasAdjacentRole(
   grid: GridCell[][],
   row: number,
   col: number,
-  dept: string
+  role: string
 ): boolean {
   // Check up
-  if (row > 0 && grid[row - 1][col].department === dept) return true;
+  if (row > 0 && grid[row - 1][col].role === role) return true;
   // Check down
-  if (row < grid.length - 1 && grid[row + 1][col].department === dept)
+  if (row < grid.length - 1 && grid[row + 1][col].role === role)
     return true;
   // Check left
-  if (col > 0 && grid[row][col - 1].department === dept) return true;
+  if (col > 0 && grid[row][col - 1].role === role) return true;
   // Check right
-  if (col < grid[row].length - 1 && grid[row][col + 1].department === dept)
+  if (col < grid[row].length - 1 && grid[row][col + 1].role === role)
     return true;
 
   return false;

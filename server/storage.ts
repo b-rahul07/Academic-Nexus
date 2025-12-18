@@ -38,9 +38,10 @@ const db = drizzle(pool);
 export interface IStorage {
   // Users
   getUser(id: string): Promise<User | undefined>;
-  getUserByUsername(username: string): Promise<User | undefined>;
+  getUserByIdentifier(identifier: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   getUsersByRole(role: string): Promise<User[]>;
+  updateUser(id: string, updates: Partial<InsertUser>): Promise<User | undefined>;
   
   // Events
   getAllEvents(): Promise<Event[]>;
@@ -90,8 +91,8 @@ export class DatabaseStorage implements IStorage {
     return result[0];
   }
 
-  async getUserByUsername(username: string): Promise<User | undefined> {
-    const result = await db.select().from(users).where(eq(users.username, username)).limit(1);
+  async getUserByIdentifier(identifier: string): Promise<User | undefined> {
+    const result = await db.select().from(users).where(eq(users.identifier, identifier)).limit(1);
     return result[0];
   }
 
@@ -102,6 +103,14 @@ export class DatabaseStorage implements IStorage {
 
   async getUsersByRole(role: string): Promise<User[]> {
     return await db.select().from(users).where(eq(users.role, role));
+  }
+
+  async updateUser(id: string, updates: Partial<InsertUser>): Promise<User | undefined> {
+    const result = await db.update(users)
+      .set(updates)
+      .where(eq(users.id, id))
+      .returning();
+    return result[0];
   }
 
   // Events
@@ -234,7 +243,6 @@ export class DatabaseStorage implements IStorage {
   async getSystemConfig(): Promise<SystemConfig | undefined> {
     const result = await db.select().from(systemConfig).limit(1);
     if (result.length === 0) {
-      // Initialize if not exists
       const init = await db.insert(systemConfig).values({ examMode: false }).returning();
       return init[0];
     }
@@ -250,7 +258,6 @@ export class DatabaseStorage implements IStorage {
         .returning();
       return result[0];
     }
-    // If no config exists, create one
     const result = await db.insert(systemConfig).values({ examMode }).returning();
     return result[0];
   }

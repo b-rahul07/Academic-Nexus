@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { AppProvider, useApp } from "@/context/AppContext";
 import { AppLayout } from "@/components/layout/AppLayout";
 import Login from "@/pages/Login";
+import ChangePassword from "@/pages/ChangePassword";
 import NotFound from "@/pages/not-found";
 
 // Placeholder Pages (We will implement these next)
@@ -17,7 +18,6 @@ function ProtectedRoute({ component: Component, role }: { component: any, role: 
   const { userRole } = useApp();
   
   if (!userRole) return <Redirect to="/" />;
-  // Simple role check - in a real app this would be more robust
   if (userRole !== role && role !== 'any') return <Redirect to="/" />;
   
   return <Component />;
@@ -27,37 +27,38 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={Login} />
+      <Route path="/change-password" component={ChangePassword} />
       
       {/* Student Routes */}
       <Route path="/student">
-        <ProtectedRoute component={StudentDashboard} role="student" />
+        <ProtectedRoute component={StudentDashboard} role="Student" />
       </Route>
       <Route path="/student/*">
-        <ProtectedRoute component={StudentDashboard} role="student" />
+        <ProtectedRoute component={StudentDashboard} role="Student" />
       </Route>
 
       {/* Admin Routes */}
       <Route path="/admin">
-        <ProtectedRoute component={AdminDashboard} role="admin" />
+        <ProtectedRoute component={AdminDashboard} role="Admin" />
       </Route>
        <Route path="/admin/*">
-        <ProtectedRoute component={AdminDashboard} role="admin" />
+        <ProtectedRoute component={AdminDashboard} role="Admin" />
       </Route>
 
       {/* Seating Routes */}
       <Route path="/seating">
-        <ProtectedRoute component={SeatingDashboard} role="seating_manager" />
+        <ProtectedRoute component={SeatingDashboard} role="SeatingManager" />
       </Route>
        <Route path="/seating/*">
-        <ProtectedRoute component={SeatingDashboard} role="seating_manager" />
+        <ProtectedRoute component={SeatingDashboard} role="SeatingManager" />
       </Route>
 
       {/* Club Routes */}
       <Route path="/club">
-        <ProtectedRoute component={ClubDashboard} role="club_coordinator" />
+        <ProtectedRoute component={ClubDashboard} role="ClubCoordinator" />
       </Route>
        <Route path="/club/*">
-        <ProtectedRoute component={ClubDashboard} role="club_coordinator" />
+        <ProtectedRoute component={ClubDashboard} role="ClubCoordinator" />
       </Route>
 
       <Route component={NotFound} />

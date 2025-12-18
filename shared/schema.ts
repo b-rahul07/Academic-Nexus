@@ -6,13 +6,11 @@ import { z } from "zod";
 // Users table
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  username: text("username").notNull().unique(),
-  password: text("password").notNull(),
-  role: text("role").notNull(), // student, admin, seating_manager, club_coordinator
-  name: text("name").notNull(),
-  department: text("department"),
-  semester: integer("semester"),
-  rollNumber: text("roll_number"),
+  role: text("role").notNull(), // Student, Admin, SeatingManager, ClubCoordinator
+  identifier: text("identifier").notNull().unique(), // Roll No, Admin ID, Faculty ID
+  dob: text("dob").notNull(), // DDMMYYYY format
+  password_hash: text("password_hash").notNull(),
+  is_first_login: boolean("is_first_login").notNull().default(true),
 });
 
 // Events/Club activities

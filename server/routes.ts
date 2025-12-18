@@ -4,12 +4,84 @@ import { storage } from "./storage";
 import { insertEventSchema, insertExamSchema, insertSeatingSchema, insertScheduleSchema } from "@shared/schema";
 import { allocateSeatingWithConstraints } from "./seatingAlgorithm";
 import { z } from "zod";
+import crypto from "crypto";
+
+function hashPassword(password: string): string {
+  return crypto.createHash("sha256").update(password).digest("hex");
+}
 
 export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
   
+  // =================== AUTH API ===================
+  
+  app.post("/api/auth/login", async (req, res) => {
+    try {
+      const { identifier, password } = req.body;
+      
+      if (!identifier || !password) {
+        return res.status(400).json({ error: "Identifier and password are required" });
+      }
+
+      const user = await storage.getUserByIdentifier(identifier);
+      
+      if (!user) {
+        return res.status(401).json({ error: "Invalid credentials" });
+      }
+
+      const passwordHash = hashPassword(password);
+      
+      if (user.password_hash !== passwordHash) {
+        return res.status(401).json({ error: "Invalid credentials" });
+      }
+
+      res.json({
+        id: user.id,
+        role: user.role,
+        identifier: user.identifier,
+        is_first_login: user.is_first_login,
+      });
+    } catch (error) {
+      console.error("Error logging in:", error);
+      res.status(500).json({ error: "Failed to login" });
+    }
+  });
+
+  app.post("/api/auth/change-password", async (req, res) => {
+    try {
+      const { userId, newPassword } = req.body;
+      
+      if (!userId || !newPassword) {
+        return res.status(400).json({ error: "userId and newPassword are required" });
+      }
+
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      const passwordHash = hashPassword(newPassword);
+      
+      const updatedUser = await storage.updateUser(userId, {
+        password_hash: passwordHash,
+        is_first_login: false,
+      });
+
+      res.json({
+        id: updatedUser?.id,
+        role: updatedUser?.role,
+        identifier: updatedUser?.identifier,
+        is_first_login: updatedUser?.is_first_login,
+      });
+    } catch (error) {
+      console.error("Error changing password:", error);
+      res.status(500).json({ error: "Failed to change password" });
+    }
+  });
+
   // =================== EVENTS API ===================
   
   app.get("/api/events", async (req, res) => {
@@ -139,24 +211,20 @@ export async function registerRoutes(
         return res.status(400).json({ error: "examId and roomId are required" });
       }
 
-      // Get the room and students
       const room = await storage.getRoomById(roomId);
       if (!room) {
         return res.status(404).json({ error: "Room not found" });
       }
 
-      const students = await storage.getUsersByRole('student');
+      const students = await storage.getUsersByRole('Student');
       if (students.length === 0) {
         return res.status(400).json({ error: "No students found" });
       }
 
-      // Delete existing allocations
       await storage.deleteSeatingsByExamAndRoom(examId, roomId);
 
-      // Run smart algorithm
       const { grid, seatings } = allocateSeatingWithConstraints(students, room);
 
-      // Save seatings to DB
       const savedSeatings = await Promise.all(
         seatings.map((seating) =>
           storage.createSeating({
@@ -175,7 +243,7 @@ export async function registerRoutes(
         grid: grid.map((r) =>
           r.map((cell) => ({
             studentId: cell.studentId,
-            department: cell.department,
+            role: cell.role,
           }))
         ),
         seatings: savedSeatings,
@@ -197,10 +265,9 @@ export async function registerRoutes(
       }
 
       const seatings = await storage.getSeatingsForExamAndRoom(examId, roomId);
-      const students = await storage.getUsersByRole('student');
+      const students = await storage.getUsersByRole('Student');
       const studentMap = new Map(students.map((s) => [s.id, s]));
 
-      // Build grid
       const grid = Array(room.rows)
         .fill(null)
         .map(() => Array(room.columns).fill(null));
@@ -209,9 +276,9 @@ export async function registerRoutes(
         const student = seating.studentId ? studentMap.get(seating.studentId) : null;
         grid[seating.row][seating.column] = {
           studentId: student?.id ?? "UNKNOWN",
-          studentName: student?.name ?? "UNKNOWN",
-          rollNumber: student?.rollNumber ?? "",
-          department: student?.department ?? "UNKNOWN",
+          studentName: student?.identifier ?? "UNKNOWN",
+          rollNumber: student?.identifier ?? "",
+          role: student?.role ?? "",
         };
       });
 
@@ -264,7 +331,7 @@ export async function registerRoutes(
   
   app.get("/api/students", async (req, res) => {
     try {
-      const students = await storage.getUsersByRole('student');
+      const students = await storage.getUsersByRole('Student');
       res.json(students);
     } catch (error) {
       console.error("Error fetching students:", error);
@@ -281,12 +348,10 @@ export async function registerRoutes(
         return res.status(400).json({ error: "Text content is required" });
       }
 
-      // Parse syllabus text to extract topics
       const lines = text.split('\n').filter(line => line.trim().length > 0);
       const nodes: any[] = [];
       const edges: any[] = [];
 
-      // Subject (main node)
       const subject = lines[0] || 'Course';
       const subjectId = 'subject-main';
       nodes.push({ id: subjectId, label: subject, type: 'subject' });
@@ -294,18 +359,15 @@ export async function registerRoutes(
       let unitCounter = 0;
       let currentUnitId = '';
 
-      // Parse topics and units
       for (let i = 1; i < lines.length; i++) {
         const line = lines[i].trim();
         const indent = lines[i].search(/\S/);
 
-        // Unit (starts with number or "Unit")
         if (line.match(/^(Unit|MODULE|Chapter|UNIT)\s+\d+/i) || (indent <= 2 && line.length > 0)) {
           currentUnitId = `unit-${unitCounter++}`;
           nodes.push({ id: currentUnitId, label: line.substring(0, 30), type: 'unit' });
           edges.push({ id: `e-${subjectId}-${currentUnitId}`, source: subjectId, target: currentUnitId });
         } 
-        // Topic (indented further)
         else if (indent > 2 && line.length > 0 && currentUnitId) {
           const topicId = `topic-${i}`;
           nodes.push({ id: topicId, label: line.substring(0, 25), type: 'topic' });
@@ -330,7 +392,6 @@ export async function registerRoutes(
         return res.status(400).json({ error: "studentId and seatNumber are required" });
       }
 
-      // Verify ticket against database
       const seatings = await storage.getSeatingsForStudent(studentId);
       const seating = seatings.find((s) => {
         return s.row !== null && s.column !== null && `${s.row}-${s.column}` === seatNumber;

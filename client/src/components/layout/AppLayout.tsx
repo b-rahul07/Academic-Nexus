@@ -26,27 +26,27 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
   if (!userRole) return <>{children}</>;
 
-  const navItems = {
-    student: [
+  const navItems: Record<string, Array<{ label: string; icon: any; path: string }>> = {
+    Student: [
       { label: 'Schedule', icon: Calendar, path: '/student' },
       { label: 'Study Support', icon: BookOpen, path: '/student/study' },
       { label: 'Hall Ticket', icon: ShieldCheck, path: '/student/hall-ticket' },
     ],
-    admin: [
+    Admin: [
       { label: 'Overview', icon: LayoutDashboard, path: '/admin' },
       { label: 'Exam Control', icon: Settings, path: '/admin/exams' },
     ],
-    seating_manager: [
+    SeatingManager: [
       { label: 'Room Map', icon: LayoutDashboard, path: '/seating' },
       { label: 'Allocation', icon: Armchair, path: '/seating/allocate' },
     ],
-    club_coordinator: [
+    ClubCoordinator: [
       { label: 'Events Board', icon: LayoutDashboard, path: '/club' },
       { label: 'Approvals', icon: PartyPopper, path: '/club/approvals' },
     ]
   };
 
-  const currentNav = navItems[userRole];
+  const currentNav = navItems[userRole] || [];
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col md:flex-row">
@@ -58,7 +58,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         </div>
 
         <nav className="flex-1 p-4 space-y-2">
-          {currentNav.map((item) => (
+          {currentNav.map((item: any) => (
             <Link key={item.path} href={item.path}>
               <div 
                 data-testid={`nav-item-${item.label.toLowerCase().replace(' ', '-')}`}
@@ -87,10 +87,10 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           <div className="flex items-center justify-between">
              <div className="flex items-center gap-2">
                <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-primary to-purple-500 flex items-center justify-center text-white font-bold text-xs">
-                  {userRole[0].toUpperCase()}
+                  {userRole?.[0].toUpperCase()}
                </div>
                <div className="min-w-0">
-                  <p className="text-sm font-medium truncate capitalize leading-tight">{userRole.replace('_', ' ')}</p>
+                  <p className="text-sm font-medium truncate capitalize leading-tight">{userRole}</p>
                   <p className="text-[10px] text-muted-foreground truncate">Online</p>
                </div>
              </div>
@@ -142,7 +142,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
       {/* Mobile Bottom Nav */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-background/80 backdrop-blur-xl border-t border-border flex items-center justify-around px-2 z-50">
-         {currentNav.map((item) => (
+         {currentNav.map((item: any) => (
             <Link key={item.path} href={item.path}>
               <div 
                 className={cn(
