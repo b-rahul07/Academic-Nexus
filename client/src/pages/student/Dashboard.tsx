@@ -87,7 +87,13 @@ const StudyMindMap = () => {
 // --- HALL TICKET MOCKUP ---
 const HallTicket = () => {
   return (
-    <DialogContent className="max-w-3xl p-0 overflow-hidden bg-white text-black border-none shadow-2xl">
+    <DialogContent className="max-w-3xl p-0 overflow-hidden bg-white text-black border-none shadow-2xl" asChild>
+      <motion.div 
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+        className="max-w-3xl p-0 overflow-hidden bg-white text-black border-none shadow-2xl rounded-2xl"
+      >
       <div className="flex flex-col h-full" id="print-area">
         {/* Header */}
         <div className="bg-slate-900 text-white p-6 flex justify-between items-center">
@@ -204,6 +210,7 @@ const HallTicket = () => {
           </div>
         </div>
       </div>
+      </motion.div>
     </DialogContent>
   );
 };
@@ -264,6 +271,11 @@ export default function StudentDashboard() {
         
         {/* Left Col */}
         <div className="md:col-span-2 space-y-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0, duration: 0.4 }}
+          >
           <Card className="glass-card">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -296,11 +308,17 @@ export default function StudentDashboard() {
               </div>
             </CardContent>
           </Card>
+          </motion.div>
 
         </div>
 
         {/* Right Col */}
         <div className="space-y-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2, duration: 0.4 }}
+          >
           <Card className="glass-card">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -331,7 +349,13 @@ export default function StudentDashboard() {
               </div>
             </CardContent>
           </Card>
+          </motion.div>
 
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, duration: 0.4 }}
+          >
           <Card className="glass-card bg-gradient-to-br from-primary/20 to-transparent border-primary/20">
             <CardHeader>
               <CardTitle className="text-lg">Upcoming Hackathon</CardTitle>
@@ -343,6 +367,7 @@ export default function StudentDashboard() {
                <Button className="w-full">Register Now</Button>
             </CardContent>
           </Card>
+          </motion.div>
         </div>
       </div>
 

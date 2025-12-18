@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Search, Download, Shuffle, Loader2, ChevronRight } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import { useSeatingAllocation } from '@/hooks/useSeatingAllocation';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -154,14 +155,15 @@ export default function SeatingDashboard() {
                             return (
                               <Tooltip key={`${rowIdx}-${colIdx}`}>
                                 <TooltipTrigger asChild>
-                                  <button
+                                  <motion.button
+                                    whileHover={{ scale: 1.2 }}
                                     className={`w-6 h-6 md:w-8 md:h-8 rounded-md flex items-center justify-center text-[8px] font-mono transition-all
-                                      ${!cell ? 'bg-white/10 border border-white/20 hover:bg-white/20' : `${getDepartmentColor(cell.department)} text-white shadow-lg hover:scale-110`}
+                                      ${!cell ? 'bg-white/10 border border-white/20 hover:bg-white/20' : `${getDepartmentColor(cell.department)} text-white shadow-lg`}
                                     `}
                                     data-testid={`seat-${rowIdx}-${colIdx}`}
                                   >
                                     {cell && cell.studentId ? cell.studentId.slice(0, 4) : '·'}
-                                  </button>
+                                  </motion.button>
                                 </TooltipTrigger>
                                 {cell && (
                                   <TooltipContent className="bg-slate-900 text-white border-slate-700">

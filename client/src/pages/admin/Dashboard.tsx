@@ -10,6 +10,7 @@ import { useExamMode } from '@/hooks/useExamMode';
 import { useEvents } from '@/hooks/useEvents';
 import { useToast } from '@/hooks/use-toast';
 import { TicketVerifier } from '@/components/TicketVerifier';
+import { motion } from 'framer-motion';
 
 const data = [
   { name: 'Jan', events: 4, exams: 2 },
@@ -57,6 +58,11 @@ export default function AdminDashboard() {
 
       {/* Stats Row */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0, duration: 0.4 }}
+        >
         <Card className="glass-card">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
@@ -71,7 +77,13 @@ export default function AdminDashboard() {
             </div>
           </CardContent>
         </Card>
+        </motion.div>
 
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1, duration: 0.4 }}
+        >
         <Card className="glass-card">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
@@ -86,7 +98,13 @@ export default function AdminDashboard() {
             </div>
           </CardContent>
         </Card>
+        </motion.div>
 
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2, duration: 0.4 }}
+        >
         <Card className="glass-card">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
@@ -101,7 +119,13 @@ export default function AdminDashboard() {
             </div>
           </CardContent>
         </Card>
+        </motion.div>
 
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3, duration: 0.4 }}
+        >
         <Card className="glass-card">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
@@ -116,6 +140,7 @@ export default function AdminDashboard() {
             </div>
           </CardContent>
         </Card>
+        </motion.div>
       </div>
 
       {/* Tabs for different admin functions */}
