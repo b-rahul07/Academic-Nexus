@@ -56,7 +56,7 @@ export default function Login() {
         console.error('Supabase query error:', error);
         toast({
           title: "Error",
-          description: "Database query failed",
+          description: error?.message || "Database query failed",
           variant: "destructive",
         });
         return;
