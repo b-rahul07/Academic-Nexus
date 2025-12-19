@@ -91,6 +91,17 @@ export default function Login() {
 
   if (showForm && selectedRole) {
     const role = roles.find(r => r.id === selectedRole);
+    
+    // Role-specific labels and placeholders
+    const identifierLabels: Record<string, { label: string; placeholder: string }> = {
+      'admin': { label: 'Admin ID', placeholder: 'Enter your admin ID' },
+      'student': { label: 'Roll Number', placeholder: 'e.g., R101' },
+      'seating_manager': { label: 'Faculty ID', placeholder: 'e.g., FAC001' },
+      'club_coordinator': { label: 'Student ID', placeholder: 'e.g., SID001' },
+    };
+
+    const roleInfo = identifierLabels[selectedRole] || identifierLabels['student'];
+
     return (
       <div className="min-h-screen w-full flex items-center justify-center bg-background">
         <Card className="w-full max-w-md p-8 space-y-6">
@@ -108,17 +119,17 @@ export default function Login() {
             </div>
             <h1 className="text-2xl font-bold">{role?.label}</h1>
             <p className="text-sm text-muted-foreground">
-              Login with your identifier and password
+              {selectedRole === 'admin' ? 'Admin login' : 'Your credentials are created by admin'}
             </p>
           </div>
 
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="identifier">Identifier</Label>
+              <Label htmlFor="identifier">{roleInfo.label}</Label>
               <Input
                 id="identifier"
                 type="text"
-                placeholder="Enter your Roll No, Admin ID, or Faculty ID"
+                placeholder={roleInfo.placeholder}
                 value={identifier}
                 onChange={(e) => setIdentifier(e.target.value)}
                 disabled={loading}
@@ -132,7 +143,7 @@ export default function Login() {
               <Input
                 id="password"
                 type="password"
-                placeholder="Enter your password"
+                placeholder={selectedRole === 'admin' ? 'Enter your password' : 'Password is DDMMYYYY format of your DOB'}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -150,11 +161,18 @@ export default function Login() {
             </Button>
           </form>
 
-          <div className="text-xs text-center text-muted-foreground">
-            <p className="mb-2">Demo Credentials:</p>
-            <p>ID: <code className="bg-muted px-1 rounded">admin</code></p>
-            <p>Password: <code className="bg-muted px-1 rounded">admin</code></p>
-          </div>
+          {selectedRole === 'admin' ? (
+            <div className="text-xs text-center text-muted-foreground bg-blue-500/10 border border-blue-500/30 rounded-md p-3">
+              <p className="font-semibold mb-1">Admin Demo Credentials:</p>
+              <p>ID: <code className="bg-muted px-1 rounded">admin</code></p>
+              <p>Password: <code className="bg-muted px-1 rounded">admin</code></p>
+            </div>
+          ) : (
+            <div className="text-xs text-center text-muted-foreground bg-amber-500/10 border border-amber-500/30 rounded-md p-3">
+              <p className="font-semibold mb-1">Don't have credentials?</p>
+              <p>Ask your administrator to create your account first.</p>
+            </div>
+          )}
         </Card>
       </div>
     );
