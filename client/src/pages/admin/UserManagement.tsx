@@ -5,13 +5,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/lib/supabase';
 import { Plus, Loader2 } from 'lucide-react';
 
 export function UserManagement() {
   const { toast } = useToast();
 
-  // Student form state
   const [studentName, setStudentName] = useState('');
   const [studentRollNo, setStudentRollNo] = useState('');
   const [studentDepartment, setStudentDepartment] = useState('');
@@ -19,27 +17,23 @@ export function UserManagement() {
   const [studentDob, setStudentDob] = useState('');
   const [studentLoading, setStudentLoading] = useState(false);
 
-  // Seating Manager form state
   const [seatingName, setSeatingName] = useState('');
   const [seatingId, setSeatingId] = useState('');
   const [seatingDesignation, setSeatingDesignation] = useState('');
   const [seatingDob, setSeatingDob] = useState('');
   const [seatingLoading, setSeatingLoading] = useState(false);
 
-  // Club Coordinator form state
   const [clubName, setClubName] = useState('');
   const [clubId, setClubId] = useState('');
   const [clubClubName, setClubClubName] = useState('');
   const [clubDob, setClubDob] = useState('');
   const [clubLoading, setClubLoading] = useState(false);
 
-  // Convert YYYY-MM-DD to DDMMYYYY format for password
   const dobToPassword = (dob: string) => {
     const [year, month, day] = dob.split('-');
     return `${day}${month}${year}`;
   };
 
-  // Add Student
   const handleAddStudent = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -55,19 +49,22 @@ export function UserManagement() {
     setStudentLoading(true);
     try {
       const password = dobToPassword(studentDob);
-      const { error } = await supabase
-        .from('users')
-        .insert({
+      const response = await fetch('/api/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
           id: studentRollNo,
           password,
           role: 'student',
           name: studentName,
           department: studentDepartment,
           year: parseInt(studentYear),
-        });
+        }),
+      });
 
-      if (error) {
-        throw error;
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to create student");
       }
 
       toast({
@@ -75,7 +72,6 @@ export function UserManagement() {
         description: `Student ${studentRollNo} created successfully`,
       });
 
-      // Reset form
       setStudentName('');
       setStudentRollNo('');
       setStudentDepartment('');
@@ -83,8 +79,6 @@ export function UserManagement() {
       setStudentDob('');
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : "Failed to create student";
-      const errorDetails = error instanceof Error && 'details' in error ? (error as any).details : 'No additional details';
-      alert(`Supabase Error: ${errorMsg}\nDetails: ${errorDetails}`);
       toast({
         title: "Error",
         description: errorMsg,
@@ -95,7 +89,6 @@ export function UserManagement() {
     }
   };
 
-  // Add Seating Manager
   const handleAddSeatingManager = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -111,18 +104,21 @@ export function UserManagement() {
     setSeatingLoading(true);
     try {
       const password = dobToPassword(seatingDob);
-      const { error } = await supabase
-        .from('users')
-        .insert({
+      const response = await fetch('/api/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
           id: seatingId,
           password,
           role: 'seating_manager',
           name: seatingName,
           designation: seatingDesignation,
-        });
+        }),
+      });
 
-      if (error) {
-        throw error;
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to create seating manager");
       }
 
       toast({
@@ -130,15 +126,12 @@ export function UserManagement() {
         description: `Seating Manager ${seatingId} created successfully`,
       });
 
-      // Reset form
       setSeatingName('');
       setSeatingId('');
       setSeatingDesignation('');
       setSeatingDob('');
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : "Failed to create seating manager";
-      const errorDetails = error instanceof Error && 'details' in error ? (error as any).details : 'No additional details';
-      alert(`Supabase Error: ${errorMsg}\nDetails: ${errorDetails}`);
       toast({
         title: "Error",
         description: errorMsg,
@@ -149,7 +142,6 @@ export function UserManagement() {
     }
   };
 
-  // Add Club Coordinator
   const handleAddClubCoordinator = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -165,18 +157,21 @@ export function UserManagement() {
     setClubLoading(true);
     try {
       const password = dobToPassword(clubDob);
-      const { error } = await supabase
-        .from('users')
-        .insert({
+      const response = await fetch('/api/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
           id: clubId,
           password,
           role: 'club_coordinator',
           name: clubName,
           club_name: clubClubName,
-        });
+        }),
+      });
 
-      if (error) {
-        throw error;
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to create club coordinator");
       }
 
       toast({
@@ -184,15 +179,12 @@ export function UserManagement() {
         description: `Club Coordinator ${clubId} created successfully`,
       });
 
-      // Reset form
       setClubName('');
       setClubId('');
       setClubClubName('');
       setClubDob('');
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : "Failed to create club coordinator";
-      const errorDetails = error instanceof Error && 'details' in error ? (error as any).details : 'No additional details';
-      alert(`Supabase Error: ${errorMsg}\nDetails: ${errorDetails}`);
       toast({
         title: "Error",
         description: errorMsg,
@@ -206,73 +198,76 @@ export function UserManagement() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold">User Management</h2>
-        <p className="text-muted-foreground">Add new users to the system</p>
+        <h1 className="text-3xl font-bold">User Management</h1>
+        <p className="text-muted-foreground">Create and manage system users</p>
       </div>
 
       <Tabs defaultValue="students" className="w-full">
         <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="students">Add Student</TabsTrigger>
-          <TabsTrigger value="seating">Add Seating Manager</TabsTrigger>
-          <TabsTrigger value="club">Add Club Coordinator</TabsTrigger>
+          <TabsTrigger value="students">Students</TabsTrigger>
+          <TabsTrigger value="seating">Seating Managers</TabsTrigger>
+          <TabsTrigger value="club">Club Coordinators</TabsTrigger>
         </TabsList>
 
-        {/* Add Student Tab */}
-        <TabsContent value="students">
-          <Card>
+        <TabsContent value="students" className="space-y-4">
+          <Card className="glass-card">
             <CardHeader>
-              <CardTitle>Add New Student</CardTitle>
-              <CardDescription>Register a new student in the system</CardDescription>
+              <CardTitle className="flex items-center gap-2">
+                <Plus className="w-5 h-5" />
+                Add Student
+              </CardTitle>
+              <CardDescription>Create a new student account</CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleAddStudent} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="student-name">Full Name *</Label>
+                    <Label htmlFor="student-name">Name</Label>
                     <Input
                       id="student-name"
-                      type="text"
-                      placeholder="Enter student name"
+                      placeholder="Full name"
                       value={studentName}
                       onChange={(e) => setStudentName(e.target.value)}
+                      disabled={studentLoading}
                       required
                       data-testid="input-student-name"
                     />
                   </div>
-
                   <div className="space-y-2">
-                    <Label htmlFor="student-roll-no">Roll Number *</Label>
+                    <Label htmlFor="student-roll">Roll Number</Label>
                     <Input
-                      id="student-roll-no"
-                      type="text"
+                      id="student-roll"
                       placeholder="e.g., R101"
                       value={studentRollNo}
                       onChange={(e) => setStudentRollNo(e.target.value)}
+                      disabled={studentLoading}
                       required
-                      data-testid="input-student-roll-no"
+                      data-testid="input-student-roll"
                     />
                   </div>
+                </div>
 
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="student-department">Department *</Label>
+                    <Label htmlFor="student-dept">Department</Label>
                     <Input
-                      id="student-department"
-                      type="text"
-                      placeholder="e.g., Computer Science"
+                      id="student-dept"
+                      placeholder="e.g., CSE"
                       value={studentDepartment}
                       onChange={(e) => setStudentDepartment(e.target.value)}
+                      disabled={studentLoading}
                       required
-                      data-testid="input-student-department"
+                      data-testid="input-student-dept"
                     />
                   </div>
-
                   <div className="space-y-2">
-                    <Label htmlFor="student-year">Year *</Label>
+                    <Label htmlFor="student-year">Year</Label>
                     <select
                       id="student-year"
                       value={studentYear}
                       onChange={(e) => setStudentYear(e.target.value)}
-                      className="w-full px-3 py-2 border border-input rounded-md bg-background"
+                      disabled={studentLoading}
+                      className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
                       data-testid="select-student-year"
                     >
                       <option value="1">1st Year</option>
@@ -281,180 +276,173 @@ export function UserManagement() {
                       <option value="4">4th Year</option>
                     </select>
                   </div>
-
-                  <div className="space-y-2 md:col-span-2">
-                    <Label htmlFor="student-dob">Date of Birth (Password will be DDMMYYYY) *</Label>
-                    <Input
-                      id="student-dob"
-                      type="date"
-                      value={studentDob}
-                      onChange={(e) => setStudentDob(e.target.value)}
-                      required
-                      data-testid="input-student-dob"
-                    />
-                  </div>
                 </div>
 
-                <Button
-                  type="submit"
-                  disabled={studentLoading}
-                  className="w-full"
-                  data-testid="button-add-student"
-                >
-                  {studentLoading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Plus className="w-4 h-4 mr-2" />}
-                  Add Student
+                <div className="space-y-2">
+                  <Label htmlFor="student-dob">Date of Birth (for password)</Label>
+                  <Input
+                    id="student-dob"
+                    type="date"
+                    value={studentDob}
+                    onChange={(e) => setStudentDob(e.target.value)}
+                    disabled={studentLoading}
+                    required
+                    data-testid="input-student-dob"
+                  />
+                  <p className="text-xs text-muted-foreground">Password will be DDMMYYYY format of DOB</p>
+                </div>
+
+                <Button type="submit" disabled={studentLoading} className="w-full" data-testid="button-add-student">
+                  {studentLoading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Plus className="w-4 h-4 mr-2" />}
+                  {studentLoading ? 'Creating...' : 'Create Student'}
                 </Button>
               </form>
             </CardContent>
           </Card>
         </TabsContent>
 
-        {/* Add Seating Manager Tab */}
-        <TabsContent value="seating">
-          <Card>
+        <TabsContent value="seating" className="space-y-4">
+          <Card className="glass-card">
             <CardHeader>
-              <CardTitle>Add New Seating Manager</CardTitle>
-              <CardDescription>Register a new seating manager in the system</CardDescription>
+              <CardTitle className="flex items-center gap-2">
+                <Plus className="w-5 h-5" />
+                Add Seating Manager
+              </CardTitle>
+              <CardDescription>Create a new seating manager account</CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleAddSeatingManager} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="seating-name">Full Name *</Label>
+                    <Label htmlFor="seating-name">Name</Label>
                     <Input
                       id="seating-name"
-                      type="text"
-                      placeholder="Enter name"
+                      placeholder="Full name"
                       value={seatingName}
                       onChange={(e) => setSeatingName(e.target.value)}
+                      disabled={seatingLoading}
                       required
                       data-testid="input-seating-name"
                     />
                   </div>
-
                   <div className="space-y-2">
-                    <Label htmlFor="seating-id">Faculty ID *</Label>
+                    <Label htmlFor="seating-id">Faculty ID</Label>
                     <Input
                       id="seating-id"
-                      type="text"
                       placeholder="e.g., FAC001"
                       value={seatingId}
                       onChange={(e) => setSeatingId(e.target.value)}
+                      disabled={seatingLoading}
                       required
                       data-testid="input-seating-id"
                     />
                   </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="seating-designation">Designation *</Label>
-                    <Input
-                      id="seating-designation"
-                      type="text"
-                      placeholder="e.g., Chief Proctor"
-                      value={seatingDesignation}
-                      onChange={(e) => setSeatingDesignation(e.target.value)}
-                      required
-                      data-testid="input-seating-designation"
-                    />
-                  </div>
-
-                  <div className="space-y-2 md:col-span-2">
-                    <Label htmlFor="seating-dob">Date of Birth (Password will be DDMMYYYY) *</Label>
-                    <Input
-                      id="seating-dob"
-                      type="date"
-                      value={seatingDob}
-                      onChange={(e) => setSeatingDob(e.target.value)}
-                      required
-                      data-testid="input-seating-dob"
-                    />
-                  </div>
                 </div>
 
-                <Button
-                  type="submit"
-                  disabled={seatingLoading}
-                  className="w-full"
-                  data-testid="button-add-seating-manager"
-                >
-                  {seatingLoading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Plus className="w-4 h-4 mr-2" />}
-                  Add Seating Manager
+                <div className="space-y-2">
+                  <Label htmlFor="seating-designation">Designation</Label>
+                  <Input
+                    id="seating-designation"
+                    placeholder="e.g., Associate Professor"
+                    value={seatingDesignation}
+                    onChange={(e) => setSeatingDesignation(e.target.value)}
+                    disabled={seatingLoading}
+                    required
+                    data-testid="input-seating-designation"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="seating-dob">Date of Birth (for password)</Label>
+                  <Input
+                    id="seating-dob"
+                    type="date"
+                    value={seatingDob}
+                    onChange={(e) => setSeatingDob(e.target.value)}
+                    disabled={seatingLoading}
+                    required
+                    data-testid="input-seating-dob"
+                  />
+                  <p className="text-xs text-muted-foreground">Password will be DDMMYYYY format of DOB</p>
+                </div>
+
+                <Button type="submit" disabled={seatingLoading} className="w-full" data-testid="button-add-seating">
+                  {seatingLoading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Plus className="w-4 h-4 mr-2" />}
+                  {seatingLoading ? 'Creating...' : 'Create Seating Manager'}
                 </Button>
               </form>
             </CardContent>
           </Card>
         </TabsContent>
 
-        {/* Add Club Coordinator Tab */}
-        <TabsContent value="club">
-          <Card>
+        <TabsContent value="club" className="space-y-4">
+          <Card className="glass-card">
             <CardHeader>
-              <CardTitle>Add New Club Coordinator</CardTitle>
-              <CardDescription>Register a new club coordinator in the system</CardDescription>
+              <CardTitle className="flex items-center gap-2">
+                <Plus className="w-5 h-5" />
+                Add Club Coordinator
+              </CardTitle>
+              <CardDescription>Create a new club coordinator account</CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleAddClubCoordinator} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="club-name">Full Name *</Label>
+                    <Label htmlFor="club-name">Name</Label>
                     <Input
                       id="club-name"
-                      type="text"
-                      placeholder="Enter name"
+                      placeholder="Full name"
                       value={clubName}
                       onChange={(e) => setClubName(e.target.value)}
+                      disabled={clubLoading}
                       required
                       data-testid="input-club-name"
                     />
                   </div>
-
                   <div className="space-y-2">
-                    <Label htmlFor="club-id">Student ID *</Label>
+                    <Label htmlFor="club-id">Coordinator ID</Label>
                     <Input
                       id="club-id"
-                      type="text"
-                      placeholder="e.g., SID001"
+                      placeholder="e.g., CID001"
                       value={clubId}
                       onChange={(e) => setClubId(e.target.value)}
+                      disabled={clubLoading}
                       required
                       data-testid="input-club-id"
                     />
                   </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="club-club-name">Club Name *</Label>
-                    <Input
-                      id="club-club-name"
-                      type="text"
-                      placeholder="e.g., Tech Club"
-                      value={clubClubName}
-                      onChange={(e) => setClubClubName(e.target.value)}
-                      required
-                      data-testid="input-club-club-name"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="club-dob">Date of Birth (Password will be DDMMYYYY) *</Label>
-                    <Input
-                      id="club-dob"
-                      type="date"
-                      value={clubDob}
-                      onChange={(e) => setClubDob(e.target.value)}
-                      required
-                      data-testid="input-club-dob"
-                    />
-                  </div>
                 </div>
 
-                <Button
-                  type="submit"
-                  disabled={clubLoading}
-                  className="w-full"
-                  data-testid="button-add-club-coordinator"
-                >
-                  {clubLoading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Plus className="w-4 h-4 mr-2" />}
-                  Add Club Coordinator
+                <div className="space-y-2">
+                  <Label htmlFor="club-club-name">Club Name</Label>
+                  <Input
+                    id="club-club-name"
+                    placeholder="e.g., Robotics Club"
+                    value={clubClubName}
+                    onChange={(e) => setClubClubName(e.target.value)}
+                    disabled={clubLoading}
+                    required
+                    data-testid="input-club-club-name"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="club-dob">Date of Birth (for password)</Label>
+                  <Input
+                    id="club-dob"
+                    type="date"
+                    value={clubDob}
+                    onChange={(e) => setClubDob(e.target.value)}
+                    disabled={clubLoading}
+                    required
+                    data-testid="input-club-dob"
+                  />
+                  <p className="text-xs text-muted-foreground">Password will be DDMMYYYY format of DOB</p>
+                </div>
+
+                <Button type="submit" disabled={clubLoading} className="w-full" data-testid="button-add-club">
+                  {clubLoading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Plus className="w-4 h-4 mr-2" />}
+                  {clubLoading ? 'Creating...' : 'Create Club Coordinator'}
                 </Button>
               </form>
             </CardContent>

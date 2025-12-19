@@ -6,7 +6,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { GraduationCap, Shield, Users, PartyPopper, Lock, ArrowRight } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
 import bgImage from '@assets/generated_images/abstract_executive_dark_background_with_glassmorphism_elements.png';
 import logo from '@assets/generated_images/minimalist_academic_university_logo_emblem.png';
 
@@ -45,36 +44,27 @@ export default function Login() {
 
     setLoading(true);
     try {
-      // Query Supabase users table directly
-      const { data: users, error } = await supabase
-        .from('users')
-        .select('*')
-        .eq('id', identifier)
-        .eq('role', selectedRole);
+      const response = await fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: identifier,
+          password,
+          role: selectedRole,
+        }),
+      });
 
-      if (error) {
-        console.error('Supabase query error:', error);
+      if (!response.ok) {
+        const error = await response.json();
         toast({
           title: "Error",
-          description: error?.message || "Database query failed",
+          description: error.error || "Login failed",
           variant: "destructive",
         });
         return;
       }
 
-      // Find user with matching password
-      const user = users?.find((u: any) => u.password === password);
-
-      if (!user) {
-        toast({
-          title: "Error",
-          description: "Invalid Credentials",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Save to localStorage
+      const user = await response.json();
       localStorage.setItem('currentUser', JSON.stringify(user));
 
       toast({
@@ -82,7 +72,6 @@ export default function Login() {
         description: `Logged in as ${user.id}`,
       });
 
-      // Redirect based on role
       const roleMap: Record<string, string> = {
         'student': '/student/dashboard',
         'admin': '/admin/dashboard',
@@ -104,7 +93,6 @@ export default function Login() {
   if (showForm && selectedRole) {
     const role = roles.find(r => r.id === selectedRole);
     
-    // Role-specific labels and placeholders
     const identifierLabels: Record<string, { label: string; placeholder: string }> = {
       'admin': { label: 'Admin ID', placeholder: 'Enter your admin ID' },
       'student': { label: 'Roll Number', placeholder: 'e.g., R101' },

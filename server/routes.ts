@@ -1,10 +1,9 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertEventSchema, insertExamSchema, insertSeatingSchema, insertScheduleSchema } from "@shared/schema";
+import { insertEventSchema, insertExamSchema, insertSeatingSchema, insertScheduleSchema, insertUserSchema } from "@shared/schema";
 import { allocateSeatingWithConstraints } from "./seatingAlgorithm";
 import { z } from "zod";
-import crypto from "crypto";
 
 export async function registerRoutes(
   httpServer: Server,
@@ -12,8 +11,42 @@ export async function registerRoutes(
 ): Promise<Server> {
   
   // =================== AUTH API ===================
-  // NOTE: Authentication is handled via Supabase directly on the frontend
-  // No backend auth endpoints needed
+  
+  app.post("/api/login", async (req, res) => {
+    try {
+      const { id, password, role } = req.body;
+      
+      if (!id || !password || !role) {
+        return res.status(400).json({ error: "Missing required fields" });
+      }
+
+      const user = await storage.getUserByIdentifier(id);
+      
+      if (!user || user.password !== password || user.role !== role) {
+        return res.status(401).json({ error: "Invalid credentials" });
+      }
+
+      res.json(user);
+    } catch (error) {
+      console.error("Error during login:", error);
+      res.status(500).json({ error: "Login failed" });
+    }
+  });
+
+  app.post("/api/users", async (req, res) => {
+    try {
+      const validatedData = insertUserSchema.parse(req.body);
+      const newUser = await storage.createUser(validatedData);
+      res.status(201).json(newUser);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ error: error.errors });
+      } else {
+        console.error("Error creating user:", error);
+        res.status(500).json({ error: "Failed to create user" });
+      }
+    }
+  });
 
   // =================== EVENTS API ===================
   
@@ -149,7 +182,7 @@ export async function registerRoutes(
         return res.status(404).json({ error: "Room not found" });
       }
 
-      const students = await storage.getUsersByRole('Student');
+      const students = await storage.getUsersByRole('student');
       if (students.length === 0) {
         return res.status(400).json({ error: "No students found" });
       }
@@ -187,7 +220,6 @@ export async function registerRoutes(
     }
   });
 
-  // Get seating grid for a room+exam
   app.get("/api/seatings/grid/:examId/:roomId", async (req, res) => {
     try {
       const { examId, roomId } = req.params;
@@ -198,7 +230,7 @@ export async function registerRoutes(
       }
 
       const seatings = await storage.getSeatingsForExamAndRoom(examId, roomId);
-      const students = await storage.getUsersByRole('Student');
+      const students = await storage.getUsersByRole('student');
       const studentMap = new Map(students.map((s) => [s.id, s]));
 
       const grid = Array(room.rows)
@@ -206,13 +238,15 @@ export async function registerRoutes(
         .map(() => Array(room.columns).fill(null));
 
       seatings.forEach((seating) => {
-        const student = seating.studentId ? studentMap.get(seating.studentId) : null;
-        grid[seating.row][seating.column] = {
-          studentId: student?.id ?? "UNKNOWN",
-          studentName: student?.identifier ?? "UNKNOWN",
-          rollNumber: student?.identifier ?? "",
-          role: student?.role ?? "",
-        };
+        const student = studentMap.get(seating.studentId);
+        if (student) {
+          grid[seating.row][seating.column] = {
+            studentId: student.id,
+            studentName: student.name,
+            rollNumber: student.id,
+            department: student.department ?? "UNKNOWN",
+          };
+        }
       });
 
       res.json({
@@ -264,7 +298,7 @@ export async function registerRoutes(
   
   app.get("/api/students", async (req, res) => {
     try {
-      const students = await storage.getUsersByRole('Student');
+      const students = await storage.getUsersByRole('student');
       res.json(students);
     } catch (error) {
       console.error("Error fetching students:", error);
@@ -272,213 +306,5 @@ export async function registerRoutes(
     }
   });
 
-  // =================== SYLLABUS PARSING API ===================
-  
-  app.post("/api/syllabus/parse", async (req, res) => {
-    try {
-      const { text } = req.body;
-      if (!text || typeof text !== 'string') {
-        return res.status(400).json({ error: "Text content is required" });
-      }
-
-      const lines = text.split('\n').filter(line => line.trim().length > 0);
-      const nodes: any[] = [];
-      const edges: any[] = [];
-
-      const subject = lines[0] || 'Course';
-      const subjectId = 'subject-main';
-      nodes.push({ id: subjectId, label: subject, type: 'subject' });
-
-      let unitCounter = 0;
-      let currentUnitId = '';
-
-      for (let i = 1; i < lines.length; i++) {
-        const line = lines[i].trim();
-        const indent = lines[i].search(/\S/);
-
-        if (line.match(/^(Unit|MODULE|Chapter|UNIT)\s+\d+/i) || (indent <= 2 && line.length > 0)) {
-          currentUnitId = `unit-${unitCounter++}`;
-          nodes.push({ id: currentUnitId, label: line.substring(0, 30), type: 'unit' });
-          edges.push({ id: `e-${subjectId}-${currentUnitId}`, source: subjectId, target: currentUnitId });
-        } 
-        else if (indent > 2 && line.length > 0 && currentUnitId) {
-          const topicId = `topic-${i}`;
-          nodes.push({ id: topicId, label: line.substring(0, 25), type: 'topic' });
-          edges.push({ id: `e-${currentUnitId}-${topicId}`, source: currentUnitId, target: topicId });
-        }
-      }
-
-      res.json({ nodes, edges, subject });
-    } catch (error) {
-      console.error("Error parsing syllabus:", error);
-      res.status(500).json({ error: "Failed to parse syllabus" });
-    }
-  });
-
-  // =================== TICKET VERIFICATION API ===================
-  
-  app.post("/api/tickets/verify", async (req, res) => {
-    try {
-      const { studentId, seatNumber } = req.body;
-      
-      if (!studentId || !seatNumber) {
-        return res.status(400).json({ error: "studentId and seatNumber are required" });
-      }
-
-      const seatings = await storage.getSeatingsForStudent(studentId);
-      const seating = seatings.find((s) => {
-        return s.row !== null && s.column !== null && `${s.row}-${s.column}` === seatNumber;
-      });
-
-      if (seating) {
-        res.json({
-          valid: true,
-          data: {
-            studentId,
-            seatNumber,
-          },
-        });
-      } else {
-        res.status(404).json({
-          valid: false,
-          error: "Ticket not found or invalid",
-        });
-      }
-    } catch (error) {
-      console.error("Error verifying ticket:", error);
-      res.status(500).json({ error: "Failed to verify ticket" });
-    }
-  });
-
-  // =================== USER MANAGEMENT API ===================
-  
-  app.get("/api/users", async (req, res) => {
-    try {
-      const allUsers = await storage.getAllUsers();
-      res.json(allUsers);
-    } catch (error) {
-      console.error("Error fetching users:", error);
-      res.status(500).json({ error: "Failed to fetch users" });
-    }
-  });
-
-  app.post("/api/users/register/student", async (req, res) => {
-    try {
-      const { name, identifier, department, year, dob } = req.body;
-      
-      if (!name || !identifier || !department || !dob) {
-        return res.status(400).json({ error: "All fields are required" });
-      }
-
-      const existing = await storage.getUserByIdentifier(identifier);
-      if (existing) {
-        return res.status(409).json({ error: "Roll number already exists" });
-      }
-
-      const user = await storage.createUser({
-        role: "student",
-        identifier,
-        dob,
-        password_hash: dob,
-        is_first_login: true,
-        name,
-        department,
-        year,
-      });
-
-      res.status(201).json(user);
-    } catch (error) {
-      console.error("Error registering student:", error);
-      res.status(500).json({ error: "Failed to register student" });
-    }
-  });
-
-  app.post("/api/users/register/seating-manager", async (req, res) => {
-    try {
-      const { name, identifier, dob } = req.body;
-      
-      if (!name || !identifier || !dob) {
-        return res.status(400).json({ error: "All fields are required" });
-      }
-
-      const existing = await storage.getUserByIdentifier(identifier);
-      if (existing) {
-        return res.status(409).json({ error: "Faculty ID already exists" });
-      }
-
-      const user = await storage.createUser({
-        role: "seating_manager",
-        identifier,
-        dob,
-        password_hash: dob,
-        is_first_login: true,
-        name,
-      });
-
-      res.status(201).json(user);
-    } catch (error) {
-      console.error("Error registering seating manager:", error);
-      res.status(500).json({ error: "Failed to register seating manager" });
-    }
-  });
-
-  app.post("/api/users/register/club-coordinator", async (req, res) => {
-    try {
-      const { name, identifier, clubName, dob } = req.body;
-      
-      if (!name || !identifier || !clubName || !dob) {
-        return res.status(400).json({ error: "All fields are required" });
-      }
-
-      const existing = await storage.getUserByIdentifier(identifier);
-      if (existing) {
-        return res.status(409).json({ error: "Student ID already exists" });
-      }
-
-      const user = await storage.createUser({
-        role: "club_coordinator",
-        identifier,
-        dob,
-        password_hash: dob,
-        is_first_login: true,
-        name,
-        club_name: clubName,
-      });
-
-      res.status(201).json(user);
-    } catch (error) {
-      console.error("Error registering club coordinator:", error);
-      res.status(500).json({ error: "Failed to register club coordinator" });
-    }
-  });
-
-  app.post("/api/users/reset-password", async (req, res) => {
-    try {
-      const { userId } = req.body;
-      
-      if (!userId) {
-        return res.status(400).json({ error: "userId is required" });
-      }
-
-      const user = await storage.getUser(userId);
-      if (!user) {
-        return res.status(404).json({ error: "User not found" });
-      }
-
-      const updatedUser = await storage.updateUser(userId, {
-        password_hash: user.dob,
-        is_first_login: true,
-      });
-
-      res.json(updatedUser);
-    } catch (error) {
-      console.error("Error resetting password:", error);
-      res.status(500).json({ error: "Failed to reset password" });
-    }
-  });
-
   return httpServer;
 }
-
-  // =================== USER MANAGEMENT API ===================
-  
