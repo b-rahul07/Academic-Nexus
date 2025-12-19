@@ -51,6 +51,7 @@ export default function Login() {
         .select('*')
         .eq('id', identifier)
         .eq('password', password)
+        .eq('role', selectedRole)
         .single();
 
       if (error || !data) {

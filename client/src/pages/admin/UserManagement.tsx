@@ -58,7 +58,7 @@ export function UserManagement() {
         .from('users')
         .insert({
           id: studentRollNo,
-          password: password,
+          password,
           role: 'student',
           name: studentName,
           department: studentDepartment,
@@ -112,7 +112,7 @@ export function UserManagement() {
         .from('users')
         .insert({
           id: seatingId,
-          password: password,
+          password,
           role: 'seating_manager',
           name: seatingName,
           dob: seatingDob,
@@ -162,7 +162,7 @@ export function UserManagement() {
         .from('users')
         .insert({
           id: clubId,
-          password: password,
+          password,
           role: 'club_coordinator',
           name: clubName,
           club_name: clubClubName,

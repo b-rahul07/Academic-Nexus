@@ -5,15 +5,13 @@ import { z } from "zod";
 
 // Users table
 export const users = pgTable("users", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  id: text("id").primaryKey(), // identifier (Roll No, Admin ID, Faculty ID, Student ID)
   role: text("role").notNull(), // Student, Admin, SeatingManager, ClubCoordinator
-  identifier: text("identifier").notNull().unique(), // Roll No, Admin ID, Faculty ID, Student ID
-  dob: text("dob").notNull(), // DDMMYYYY format
-  password_hash: text("password_hash").notNull(),
-  is_first_login: boolean("is_first_login").notNull().default(true),
+  password: text("password").notNull(), // Plain text password (DDMMYYYY format for DOB-based)
   name: text("name").notNull(),
   department: text("department"), // For students
   year: integer("year"), // For students (1, 2, 3, 4)
+  dob: text("dob"), // DDMMYYYY format
   club_name: text("club_name"), // For club coordinators
 });
 
