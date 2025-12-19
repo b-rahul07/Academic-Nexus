@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { GraduationCap, Shield, Users, PartyPopper, Lock, ArrowRight } from 'lucide-react';
+import { supabase } from '../../../lib/supabase';
 import bgImage from '@assets/generated_images/abstract_executive_dark_background_with_glassmorphism_elements.png';
 import logo from '@assets/generated_images/minimalist_academic_university_logo_emblem.png';
 
@@ -44,39 +45,39 @@ export default function Login() {
 
     setLoading(true);
     try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ identifier, password }),
-      });
+      // Query Supabase users table directly
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', identifier)
+        .eq('password', password)
+        .single();
 
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Login failed');
+      if (error || !data) {
+        toast({
+          title: "Error",
+          description: "Invalid Credentials",
+          variant: "destructive",
+        });
+        return;
       }
 
-      const data = await response.json();
-
-      localStorage.setItem('userId', data.id);
-      localStorage.setItem('userRole', data.role);
-      localStorage.setItem('identifier', data.identifier);
+      // Save to localStorage
+      localStorage.setItem('currentUser', JSON.stringify(data));
 
       toast({
         title: "Success",
-        description: `Logged in as ${data.identifier}`,
+        description: `Logged in as ${data.id}`,
       });
 
-      if (data.is_first_login) {
-        setLocation('/change-password');
-      } else {
-        const roleMap: Record<string, string> = {
-          'student': '/student/dashboard',
-          'admin': '/admin/dashboard',
-          'seating_manager': '/seating/dashboard',
-          'club_coordinator': '/club/dashboard',
-        };
-        setLocation(roleMap[data.role] || '/');
-      }
+      // Redirect based on role
+      const roleMap: Record<string, string> = {
+        'student': '/student/dashboard',
+        'admin': '/admin/dashboard',
+        'seating_manager': '/seating/dashboard',
+        'club_coordinator': '/club/dashboard',
+      };
+      setLocation(roleMap[data.role] || '/');
     } catch (error) {
       toast({
         title: "Error",
