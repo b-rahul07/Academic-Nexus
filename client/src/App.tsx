@@ -4,8 +4,8 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { AppProvider } from "@/context/AppContext";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { MainLayout } from "@/components/MainLayout";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { CardNav } from "@/components/CardNav";
 import Login from "@/pages/Login";
 import ChangePassword from "@/pages/ChangePassword";
 import NotFound from "@/pages/not-found";
@@ -122,34 +122,34 @@ function Router() {
       
       {/* Student Routes */}
       <Route path="/student/dashboard">
-        <ProtectedRoute component={StudentDashboard} requiredRole="student" />
+        <ProtectedRoute component={() => <MainLayout userRole="student"><StudentDashboard /></MainLayout>} requiredRole="student" />
       </Route>
       <Route path="/student/*">
-        <ProtectedRoute component={StudentDashboard} requiredRole="student" />
+        <ProtectedRoute component={() => <MainLayout userRole="student"><StudentDashboard /></MainLayout>} requiredRole="student" />
       </Route>
 
       {/* Admin Routes */}
       <Route path="/admin/dashboard">
-        <ProtectedRoute component={AdminDashboard} requiredRole="admin" />
+        <ProtectedRoute component={() => <MainLayout userRole="admin"><AdminDashboard /></MainLayout>} requiredRole="admin" />
       </Route>
       <Route path="/admin/*">
-        <ProtectedRoute component={AdminDashboard} requiredRole="admin" />
+        <ProtectedRoute component={() => <MainLayout userRole="admin"><AdminDashboard /></MainLayout>} requiredRole="admin" />
       </Route>
 
       {/* Seating Routes */}
       <Route path="/seating/dashboard">
-        <ProtectedRoute component={SeatingDashboard} requiredRole="seating_manager" />
+        <ProtectedRoute component={() => <MainLayout userRole="seating_manager"><SeatingDashboard /></MainLayout>} requiredRole="seating_manager" />
       </Route>
       <Route path="/seating/*">
-        <ProtectedRoute component={SeatingDashboard} requiredRole="seating_manager" />
+        <ProtectedRoute component={() => <MainLayout userRole="seating_manager"><SeatingDashboard /></MainLayout>} requiredRole="seating_manager" />
       </Route>
 
       {/* Club Routes */}
       <Route path="/club/dashboard">
-        <ProtectedRoute component={ClubDashboard} requiredRole="club_coordinator" />
+        <ProtectedRoute component={() => <MainLayout userRole="club_coordinator"><ClubDashboard /></MainLayout>} requiredRole="club_coordinator" />
       </Route>
       <Route path="/club/*">
-        <ProtectedRoute component={ClubDashboard} requiredRole="club_coordinator" />
+        <ProtectedRoute component={() => <MainLayout userRole="club_coordinator"><ClubDashboard /></MainLayout>} requiredRole="club_coordinator" />
       </Route>
 
       <Route component={NotFound} />
@@ -165,7 +165,6 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <AppProvider>
         <ErrorBoundary>
-          {currentUser && <CardNav items={getNavItems(currentUser.role)} />}
           <AppLayout>
             <Router />
           </AppLayout>

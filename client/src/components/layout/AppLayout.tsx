@@ -49,7 +49,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const currentNav = navItems[userRole] || [];
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col md:flex-row pt-80">
+    <div className="min-h-screen bg-background text-foreground flex flex-col md:flex-row">
       {/* Sidebar - Desktop */}
       <aside className="w-64 border-r border-border bg-sidebar hidden md:flex flex-col">
         <div className="p-6 border-b border-border flex items-center gap-3">
