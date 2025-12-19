@@ -61,7 +61,7 @@ Preferred communication style: Simple, everyday language.
 - Backend API endpoint for ticket validation
 - Integration with student database
 
-### 4. Study Support Module (NEW)
+### 4. Study Support Module
 - **File Upload**: Accept .txt syllabus files
 - **Text Parsing**: Backend API extracts topics with hierarchy
 - **ReactFlow Visualization**: Interactive mind map showing:
@@ -69,8 +69,19 @@ Preferred communication style: Simple, everyday language.
   - Units branching from subject (purple nodes)
   - Topics branching from units (dark nodes)
 - **Interactive Nodes**: Click topics to select them
-- **Reading Recommendations**: Sidebar displays dummy reading resources for selected topics
+- **Reading Recommendations**: Sidebar displays reading resources for selected topics
 - **API Endpoint**: `POST /api/syllabus/parse` handles text parsing and node generation
+
+### 5. User Management System (FIXED)
+- **Schema-Compliant Form Submissions**: All user types send only required columns
+  - Student: `id`, `password` (derived from DOB), `role`, `name`, `department`, `year`
+  - Seating Manager (Faculty): `id`, `password`, `role`, `name`, `designation`
+  - Club Coordinator: `id`, `password`, `role`, `name`, `club_name`
+- **Enhanced Error Handling**: Displays specific Supabase errors with alert messages
+  - Format: `Supabase Error: {errorMsg}\nDetails: {errorDetails}`
+  - Shows column mismatch and constraint violation errors
+- **Form Validation**: All required fields validated before submission
+- **Success Actions**: Forms clear on successful submission + success toast notification
 
 ## External Dependencies
 
@@ -98,7 +109,15 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
-### Study Support Module Added (Latest)
+### User Management Fixed (Latest)
+- Removed hardcoded/fake data from all dashboards
+- Fixed "Add User" form schema to match Supabase columns exactly
+- Added "Designation" field to Seating Manager form
+- Improved error handling with detailed Supabase error messages
+- Verified form reset on success
+- All forms now only send columns that exist in database
+
+### Study Support Module
 - Created `client/src/components/StudySupport.tsx` component
 - Added `POST /api/syllabus/parse` backend endpoint for topic extraction
 - Integrated Study Support into Student Dashboard
@@ -106,4 +125,5 @@ Preferred communication style: Simple, everyday language.
 
 ## Known Issues & Notes
 - PDF import for syllabus (via pdfjs-dist) is available but basic text file upload is recommended
-- Reading recommendations are currently hardcoded dummy data; can be enhanced with database integration
+- Reading recommendations are currently dummy data; can be enhanced with database integration
+- Dashboard metrics (student count, exams) show "0" until database records are added

@@ -22,6 +22,7 @@ export function UserManagement() {
   // Seating Manager form state
   const [seatingName, setSeatingName] = useState('');
   const [seatingId, setSeatingId] = useState('');
+  const [seatingDesignation, setSeatingDesignation] = useState('');
   const [seatingDob, setSeatingDob] = useState('');
   const [seatingLoading, setSeatingLoading] = useState(false);
 
@@ -63,7 +64,6 @@ export function UserManagement() {
           name: studentName,
           department: studentDepartment,
           year: parseInt(studentYear),
-          dob: studentDob,
         });
 
       if (error) {
@@ -82,9 +82,12 @@ export function UserManagement() {
       setStudentYear('1');
       setStudentDob('');
     } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : "Failed to create student";
+      const errorDetails = error instanceof Error && 'details' in error ? (error as any).details : 'No additional details';
+      alert(`Supabase Error: ${errorMsg}\nDetails: ${errorDetails}`);
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Failed to create student",
+        description: errorMsg,
         variant: "destructive",
       });
     } finally {
@@ -96,7 +99,7 @@ export function UserManagement() {
   const handleAddSeatingManager = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!seatingName || !seatingId || !seatingDob) {
+    if (!seatingName || !seatingId || !seatingDesignation || !seatingDob) {
       toast({
         title: "Error",
         description: "Please fill in all required fields",
@@ -115,7 +118,7 @@ export function UserManagement() {
           password,
           role: 'seating_manager',
           name: seatingName,
-          dob: seatingDob,
+          designation: seatingDesignation,
         });
 
       if (error) {
@@ -130,11 +133,15 @@ export function UserManagement() {
       // Reset form
       setSeatingName('');
       setSeatingId('');
+      setSeatingDesignation('');
       setSeatingDob('');
     } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : "Failed to create seating manager";
+      const errorDetails = error instanceof Error && 'details' in error ? (error as any).details : 'No additional details';
+      alert(`Supabase Error: ${errorMsg}\nDetails: ${errorDetails}`);
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Failed to create seating manager",
+        description: errorMsg,
         variant: "destructive",
       });
     } finally {
@@ -166,7 +173,6 @@ export function UserManagement() {
           role: 'club_coordinator',
           name: clubName,
           club_name: clubClubName,
-          dob: clubDob,
         });
 
       if (error) {
@@ -184,9 +190,12 @@ export function UserManagement() {
       setClubClubName('');
       setClubDob('');
     } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : "Failed to create club coordinator";
+      const errorDetails = error instanceof Error && 'details' in error ? (error as any).details : 'No additional details';
+      alert(`Supabase Error: ${errorMsg}\nDetails: ${errorDetails}`);
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Failed to create club coordinator",
+        description: errorMsg,
         variant: "destructive",
       });
     } finally {
@@ -333,6 +342,19 @@ export function UserManagement() {
                       onChange={(e) => setSeatingId(e.target.value)}
                       required
                       data-testid="input-seating-id"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="seating-designation">Designation *</Label>
+                    <Input
+                      id="seating-designation"
+                      type="text"
+                      placeholder="e.g., Chief Proctor"
+                      value={seatingDesignation}
+                      onChange={(e) => setSeatingDesignation(e.target.value)}
+                      required
+                      data-testid="input-seating-designation"
                     />
                   </div>
 
