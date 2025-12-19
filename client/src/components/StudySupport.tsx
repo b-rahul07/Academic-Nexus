@@ -1,284 +1,189 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ReactFlow, Background, Controls, Handle, Position, MarkerType } from 'reactflow';
 import 'reactflow/dist/style.css';
-import { Upload, Loader2, BookOpen, ExternalLink, Youtube, Plus, X } from 'lucide-react';
+import { Upload, Loader2, BookOpen, ExternalLink } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import * as pdfjsLib from 'pdfjs-dist';
 
-pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+const CustomNode = ({ data, selected }: { data: any; selected: boolean }) => {
+  const getColor = (type: string) => {
+    switch (type) {
+      case 'subject': return '#3b82f6';
+      case 'unit': return '#8b5cf6';
+      case 'topic': return '#1e293b';
+      default: return '#64748b';
+    }
+  };
 
-interface MindMapNode {
-  id: string;
-  label: string;
-  type: 'parent' | 'child';
-  nodeColor?: string;
-}
-
-interface MindMapEdge {
-  id: string;
-  source: string;
-  target: string;
-}
-
-const SAMPLE_SYLLABUS = `Unit 1: Introduction to Data Structures
-- Arrays and Dynamic Arrays
-- Linked Lists (Singly and Doubly)
-- Basic operations: Insert, Delete, Search
-
-Unit 2: Stack and Queue
-- Stack implementation and applications
-- Queue types: Simple, Circular, Priority Queue
-- Stack applications: Expression evaluation, Recursion
-
-Unit 3: Trees and Graphs
-- Binary Trees: Traversal and Searching
-- Tree balancing: AVL and Red-Black Trees
-- Graph representation and algorithms
-- BFS and DFS traversals
-
-Unit 4: Sorting and Searching
-- Bubble Sort and Insertion Sort
-- Quick Sort and Merge Sort
-- Linear and Binary Search
-- Analysis of sorting algorithms`;
-
-const ParentNode = ({ data, selected }: any) => (
-  <div
-    style={{
-      background: data.color || '#3b82f6',
-      color: 'white',
-      padding: '15px 20px',
-      borderRadius: '8px',
-      fontSize: '13px',
-      fontWeight: 'bold',
-      border: selected ? '3px solid #fbbf24' : '2px solid rgba(255,255,255,0.2)',
-      cursor: 'pointer',
-      width: '140px',
-      textAlign: 'center',
-      wordWrap: 'break-word',
-      boxShadow: '0 4px 15px rgba(0,0,0,0.3)',
-    }}
-    data-testid={`parent-node-${data.label}`}
-  >
-    {data.label}
-    <Handle type="target" position={Position.Top} />
-    <Handle type="source" position={Position.Bottom} />
-  </div>
-);
-
-const ChildNode = ({ data, selected }: any) => (
-  <div
-    style={{
-      background: data.color || '#8b5cf6',
-      color: 'white',
-      padding: '8px 12px',
-      borderRadius: '50%',
-      fontSize: '11px',
-      fontWeight: '500',
-      border: selected ? '3px solid #fbbf24' : '2px solid rgba(255,255,255,0.3)',
-      cursor: 'pointer',
-      width: '80px',
-      height: '80px',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      textAlign: 'center',
-      boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
-    }}
-    data-testid={`child-node-${data.label}`}
-  >
-    {data.label}
-    <Handle type="target" position={Position.Top} />
-    <Handle type="source" position={Position.Bottom} />
-  </div>
-);
+  return (
+    <div
+      style={{
+        background: getColor(data.type),
+        color: 'white',
+        padding: '10px 15px',
+        borderRadius: '6px',
+        fontSize: '12px',
+        fontWeight: data.type === 'subject' ? 'bold' : 'normal',
+        border: selected ? '2px solid #fbbf24' : 'none',
+        cursor: 'pointer',
+        maxWidth: '120px',
+        textAlign: 'center',
+        wordWrap: 'break-word',
+      }}
+      data-testid={`node-${data.label}`}
+    >
+      {data.label}
+      <Handle type="target" position={Position.Top} />
+      <Handle type="source" position={Position.Bottom} />
+    </div>
+  );
+};
 
 export function StudySupport() {
-  const [syllabusText, setSyllabusText] = useState<string>('');
+  const [uploadedText, setUploadedText] = useState<string>('');
+  const [isUploading, setIsUploading] = useState(false);
   const [selectedNode, setSelectedNode] = useState<string | null>(null);
-  const [nodes, setNodes] = useState<any[]>([]);
-  const [edges, setEdges] = useState<any[]>([]);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
-  const COLORS = ['#3b82f6', '#8b5cf6', '#ec4899', '#f97316', '#10b981', '#06b6d4'];
+  const { data: parsedData, isLoading } = useQuery({
+    queryKey: ['syllabus', uploadedText],
+    queryFn: async () => {
+      if (!uploadedText.trim()) return null;
+      const res = await fetch('/api/syllabus/parse', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: uploadedText }),
+      });
+      return res.json();
+    },
+    enabled: !!uploadedText,
+  });
 
-  const parseSyllabusText = (text: string) => {
-    const lines = text.split('\n').filter(line => line.trim());
-    const newNodes: MindMapNode[] = [];
-    const newEdges: MindMapEdge[] = [];
-    let currentParentId = '';
-    let parentCounter = 0;
-    let childCounter = 0;
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
 
-    for (const line of lines) {
-      const trimmed = line.trim();
-
-      // Check if it's a unit/module (parent node)
-      if (/^(unit|module|chapter|section)\s+(\d+|[a-z])/i.test(trimmed)) {
-        const parentId = `parent-${parentCounter}`;
-        const parentLabel = trimmed.replace(/^(unit|module|chapter|section)\s+/i, '').slice(0, 30);
-        
-        newNodes.push({
-          id: parentId,
-          label: parentLabel,
-          type: 'parent',
-          nodeColor: COLORS[parentCounter % COLORS.length],
-        });
-
-        currentParentId = parentId;
-        parentCounter++;
-      } 
-      // Child nodes (bullet points or indented lines)
-      else if (currentParentId && (trimmed.startsWith('-') || trimmed.startsWith('•') || /^\d+\./.test(trimmed))) {
-        const childLabel = trimmed.replace(/^[-•\d+.]\s*/, '').slice(0, 25);
-        const childId = `child-${currentParentId}-${childCounter}`;
-
-        newNodes.push({
-          id: childId,
-          label: childLabel,
-          type: 'child',
-          nodeColor: COLORS[(parentCounter - 1 + childCounter) % COLORS.length],
-        });
-
-        newEdges.push({
-          id: `edge-${currentParentId}-${childId}`,
-          source: currentParentId,
-          target: childId,
-        });
-
-        childCounter++;
-      }
+    setIsUploading(true);
+    try {
+      const text = await file.text();
+      setUploadedText(text);
+    } catch (error) {
+      console.error('Error reading file:', error);
+    } finally {
+      setIsUploading(false);
     }
-
-    return { newNodes, newEdges };
   };
 
-  const generateReactFlowData = (syllabus: string) => {
-    if (!syllabus.trim()) {
-      setNodes([]);
-      setEdges([]);
-      return;
-    }
+  const getReadingLinks = (unitName: string) => {
+    const readings: Record<string, Array<{ title: string; url: string }>> = {
+      'Data Structures': [
+        { title: 'Introduction to Algorithms (CLRS)', url: '#' },
+        { title: 'Data Structures and Algorithms Made Easy', url: '#' },
+        { title: 'GeeksforGeeks - DSA Tutorial', url: '#' },
+      ],
+      'Algorithms': [
+        { title: 'Algorithm Design Manual', url: '#' },
+        { title: 'Competitive Programming Handbook', url: '#' },
+        { title: 'LeetCode - Problem Solving', url: '#' },
+      ],
+      'default': [
+        { title: 'Course Textbook', url: '#' },
+        { title: 'Professor Notes', url: '#' },
+        { title: 'Online Resources', url: '#' },
+      ],
+    };
 
-    const { newNodes, newEdges } = parseSyllabusText(syllabus);
-    
-    // Position nodes
-    const positioned = newNodes.map((node, idx) => {
-      let x, y;
-      if (node.type === 'parent') {
-        const parentIndex = newNodes.filter((n, i) => n.type === 'parent' && i <= idx).length - 1;
-        x = 200 + parentIndex * 250;
-        y = 100;
-      } else {
-        const parentNode = newNodes.find(n => n.id === `parent-${parseInt(node.id.split('-')[1])}`);
-        const parentIdx = parentNode ? newNodes.indexOf(parentNode) : 0;
-        const childIdx = newNodes.filter(n => n.id.startsWith(`child-parent-${parseInt(node.id.split('-')[1])}`)).indexOf(node);
-        x = 200 + parentIdx * 250;
-        y = 250 + childIdx * 110;
-      }
-
-      return {
-        id: node.id,
-        data: { label: node.label, color: node.nodeColor },
-        position: { x, y },
-        type: node.type === 'parent' ? 'parentNode' : 'childNode',
-      };
-    });
-
-    const positionedEdges = newEdges.map(edge => ({
-      id: edge.id,
-      source: edge.source,
-      target: edge.target,
-      animated: true,
-      style: { stroke: '#8b5cf6', strokeWidth: 2 },
-      markerEnd: { type: MarkerType.ArrowClosed },
-    }));
-
-    setNodes(positioned);
-    setEdges(positionedEdges);
+    return readings[unitName] || readings['default'];
   };
 
-  const handleLoadSample = () => {
-    setSyllabusText(SAMPLE_SYLLABUS);
-    generateReactFlowData(SAMPLE_SYLLABUS);
-  };
+  const processedNodes = parsedData?.nodes?.map((node: any) => ({
+    id: node.id,
+    data: { label: node.label, type: node.type },
+    position: { x: Math.random() * 400, y: Math.random() * 400 },
+    type: 'custom',
+  })) || [];
 
-  const handleTextChange = (text: string) => {
-    setSyllabusText(text);
-    generateReactFlowData(text);
-  };
-
-  const getYouTubeLinks = (nodeLabel: string) => {
-    const query = encodeURIComponent(nodeLabel + ' tutorial');
-    return [
-      { title: `${nodeLabel} - Full Tutorial`, url: `https://www.youtube.com/results?search_query=${query}` },
-      { title: `${nodeLabel} - Easy Explanation`, url: `https://www.youtube.com/results?search_query=${query}+easy` },
-      { title: `${nodeLabel} - Practice Problems`, url: `https://www.youtube.com/results?search_query=${query}+problems` },
-    ];
-  };
-
-  const selectedNodeData = nodes.find(n => n.id === selectedNode);
+  const processedEdges = parsedData?.edges?.map((edge: any) => ({
+    id: edge.id,
+    source: edge.source,
+    target: edge.target,
+    animated: true,
+    style: { stroke: '#8b5cf6' },
+    markerEnd: { type: MarkerType.ArrowClosed },
+  })) || [];
 
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {/* Input Section */}
         <Card className="glass-card lg:col-span-1">
           <CardHeader>
-            <CardTitle className="text-lg">Input Syllabus</CardTitle>
-            <CardDescription>Paste your syllabus content</CardDescription>
+            <CardTitle className="text-lg">Upload Syllabus</CardTitle>
+            <CardDescription>Add your course syllabus</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <textarea
-              placeholder="Paste your syllabus here or click 'Load Sample'..."
-              value={syllabusText}
-              onChange={(e) => handleTextChange(e.target.value)}
-              className="w-full h-48 resize-none p-3 rounded-md bg-white/5 border border-white/10 text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-              data-testid="textarea-syllabus"
-            />
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={handleLoadSample}
-              className="w-full gap-2"
-              data-testid="button-load-sample"
-            >
-              <Plus className="w-4 h-4" />
-              Load Sample Syllabus
-            </Button>
-            {nodes.length > 0 && (
-              <Badge className="w-full justify-center" data-testid="badge-nodes-count">
-                {nodes.filter(n => n.type === 'parentNode').length} Units, {nodes.filter(n => n.type === 'childNode').length} Topics
+            <div className="border-2 border-dashed border-white/20 rounded-lg p-4 text-center">
+              <Button
+                variant="outline"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isUploading}
+                className="w-full gap-2"
+                data-testid="button-upload-syllabus"
+              >
+                {isUploading ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Upload className="w-4 h-4" />
+                )}
+                {isUploading ? 'Reading...' : 'Upload File'}
+              </Button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".txt,.pdf"
+                onChange={handleFileUpload}
+                className="hidden"
+              />
+              <p className="text-xs text-muted-foreground mt-2">Supports .txt files</p>
+            </div>
+
+            {uploadedText && (
+              <div className="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/30">
+                <p className="text-xs font-medium text-emerald-400">✓ File loaded</p>
+              </div>
+            )}
+
+            {parsedData && (
+              <Badge className="w-full justify-center" data-testid="badge-parsed">
+                {parsedData.nodes?.length || 0} Topics Found
               </Badge>
             )}
           </CardContent>
         </Card>
 
-        {/* Visualization Section */}
         <Card className="glass-card lg:col-span-3">
           <CardHeader>
-            <CardTitle>Mind Map Visualization</CardTitle>
+            <CardTitle>Syllabus Hierarchy</CardTitle>
             <CardDescription>
-              {nodes.length === 0 ? 'Enter syllabus to see mind map' : 'Click nodes to view resources'}
+              {isLoading ? 'Processing...' : 'Interactive mind map of topics'}
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {nodes.length > 0 ? (
+            {isLoading ? (
+              <div className="h-96 flex items-center justify-center text-muted-foreground">
+                <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                Parsing syllabus...
+              </div>
+            ) : processedNodes.length > 0 ? (
               <div className="h-96 w-full rounded-xl border border-white/10 overflow-hidden bg-black/20">
                 <ReactFlow
-                  nodes={nodes}
-                  edges={edges}
-                  nodeTypes={{
-                    parentNode: ParentNode,
-                    childNode: ChildNode,
-                  }}
+                  nodes={processedNodes}
+                  edges={processedEdges}
+                  nodeTypes={{ custom: CustomNode }}
                   fitView
-                  onNodeClick={(_, node) => setSelectedNode(node.id)}
+                  onNodeClick={(event, node) => setSelectedNode(node.id)}
                   attributionPosition="bottom-right"
                 >
                   <Background color="#444" gap={16} />
@@ -289,7 +194,7 @@ export function StudySupport() {
               <div className="h-96 flex items-center justify-center text-muted-foreground">
                 <div className="text-center">
                   <BookOpen className="w-12 h-12 opacity-50 mx-auto mb-2" />
-                  <p>Enter syllabus content to visualize topics</p>
+                  <p>Upload a syllabus to visualize topics</p>
                 </div>
               </div>
             )}
@@ -297,41 +202,29 @@ export function StudySupport() {
         </Card>
       </div>
 
-      {/* Resources Drawer */}
-      {selectedNode && selectedNodeData && (
-        <Card className="glass-card" data-testid="card-resources-drawer">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <div>
-              <CardTitle className="text-lg">Resources for: {selectedNodeData.data.label}</CardTitle>
-              <CardDescription>Recommended YouTube videos</CardDescription>
-            </div>
-            <Button
-              size="icon"
-              variant="ghost"
-              onClick={() => setSelectedNode(null)}
-              data-testid="button-close-drawer"
-            >
-              <X className="w-4 h-4" />
-            </Button>
+      {selectedNode && parsedData && (
+        <Card className="glass-card" data-testid="card-readings">
+          <CardHeader>
+            <CardTitle className="text-lg">Recommended Reading</CardTitle>
+            <CardDescription>
+              Resources for: <Badge variant="outline" className="ml-2">{selectedNode}</Badge>
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <ScrollArea className="h-64">
               <div className="space-y-3 pr-4">
-                {getYouTubeLinks(selectedNodeData.data.label).map((link, idx) => (
+                {getReadingLinks(selectedNode).map((link, idx) => (
                   <a
                     key={idx}
                     href={link.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-start gap-3 p-3 rounded-lg hover-elevate border border-white/10 bg-white/5 transition-colors"
-                    data-testid={`link-youtube-${idx}`}
+                    className="flex items-start gap-3 p-3 rounded-lg hover-elevate border border-white/10 bg-white/5"
+                    data-testid={`link-reading-${idx}`}
                   >
-                    <div className="p-2 rounded-lg bg-red-500/20 flex-shrink-0">
-                      <Youtube className="w-4 h-4 text-red-500" />
-                    </div>
                     <div className="flex-1">
                       <p className="text-sm font-medium text-foreground">{link.title}</p>
-                      <p className="text-xs text-muted-foreground mt-1">Open on YouTube</p>
+                      <p className="text-xs text-muted-foreground mt-1">Click to access</p>
                     </div>
                     <ExternalLink className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-1" />
                   </a>
