@@ -13,6 +13,9 @@ export const users = pgTable("users", {
   year: integer("year"), // For students (1, 2, 3, 4)
   dob: text("dob"), // DDMMYYYY format
   club_name: text("club_name"), // For club coordinators
+  academic_status: text("academic_status").default('active'), // active, detained
+  additional_roles: text("additional_roles").array(), // seating_manager, club_coordinator
+  designation: text("designation"), // For faculty
 });
 
 // Events/Club activities

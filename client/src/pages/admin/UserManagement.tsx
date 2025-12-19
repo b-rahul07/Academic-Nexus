@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/lib/supabase';
+import { apiRequest, queryClient as globalQueryClient } from '@/lib/queryClient';
 import { cn } from '@/lib/utils';
 import { Plus, Loader2, AlertCircle } from 'lucide-react';
 
@@ -45,23 +45,14 @@ export function UserManagement() {
   const [clubLoading, setClubLoading] = useState(false);
 
   // Fetch all users
-  const { data: users = [], isLoading: usersLoading, error } = useQuery({
+  const { data: users = [], isLoading: usersLoading, error } = useQuery<User[]>({
     queryKey: ['/api/users'],
-    queryFn: async () => {
-      const { data, error } = await supabase.from('users').select('*');
-      if (error) throw error;
-      return data as User[];
-    },
   });
 
   // Update academic status mutation
   const updateStatusMutation = useMutation({
     mutationFn: async ({ userId, status }: { userId: string; status: string }) => {
-      const { error } = await supabase
-        .from('users')
-        .update({ academic_status: status })
-        .eq('id', userId);
-      if (error) throw error;
+      return await apiRequest('PATCH', `/api/users/${userId}`, { academic_status: status });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/users'] });
@@ -80,11 +71,7 @@ export function UserManagement() {
       const newRoles = currentRoles.includes(duty)
         ? currentRoles.filter(r => r !== duty)
         : [...currentRoles, duty];
-      const { error } = await supabase
-        .from('users')
-        .update({ additional_roles: newRoles })
-        .eq('id', userId);
-      if (error) throw error;
+      return await apiRequest('PATCH', `/api/users/${userId}`, { additional_roles: newRoles });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/users'] });
@@ -115,25 +102,21 @@ export function UserManagement() {
     setStudentLoading(true);
     try {
       const password = dobToPassword(studentDob);
-      const { error } = await supabase
-        .from('users')
-        .insert({
-          id: studentRollNo,
-          password,
-          role: 'student',
-          name: studentName,
-          department: studentDepartment,
-          year: parseInt(studentYear),
-        });
-
-      if (error) {
-        throw error;
-      }
+      await apiRequest('POST', '/api/users', {
+        id: studentRollNo,
+        password,
+        role: 'student',
+        name: studentName,
+        department: studentDepartment,
+        year: parseInt(studentYear),
+      });
 
       toast({
         title: "Success",
         description: `Student ${studentRollNo} created successfully`,
       });
+
+      queryClient.invalidateQueries({ queryKey: ['/api/users'] });
 
       setStudentName('');
       setStudentRollNo('');
@@ -167,31 +150,27 @@ export function UserManagement() {
     setSeatingLoading(true);
     try {
       const password = dobToPassword(seatingDob);
-      const { error } = await supabase
-        .from('users')
-        .insert({
-          id: seatingId,
-          password,
-          role: 'seating_manager',
-          name: seatingName,
-          designation: seatingDesignation,
-        });
-
-      if (error) {
-        throw error;
-      }
+      await apiRequest('POST', '/api/users', {
+        id: seatingId,
+        password,
+        role: 'faculty',
+        name: seatingName,
+        designation: seatingDesignation,
+      });
 
       toast({
         title: "Success",
-        description: `Seating Manager ${seatingId} created successfully`,
+        description: `Faculty ${seatingId} created successfully`,
       });
+
+      queryClient.invalidateQueries({ queryKey: ['/api/users'] });
 
       setSeatingName('');
       setSeatingId('');
       setSeatingDesignation('');
       setSeatingDob('');
     } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : "Failed to create seating manager";
+      const errorMsg = error instanceof Error ? error.message : "Failed to create faculty";
       toast({
         title: "Error",
         description: errorMsg,
@@ -217,24 +196,20 @@ export function UserManagement() {
     setClubLoading(true);
     try {
       const password = dobToPassword(clubDob);
-      const { error } = await supabase
-        .from('users')
-        .insert({
-          id: clubId,
-          password,
-          role: 'club_coordinator',
-          name: clubName,
-          club_name: clubClubName,
-        });
-
-      if (error) {
-        throw error;
-      }
+      await apiRequest('POST', '/api/users', {
+        id: clubId,
+        password,
+        role: 'club_coordinator',
+        name: clubName,
+        club_name: clubClubName,
+      });
 
       toast({
         title: "Success",
         description: `Club Coordinator ${clubId} created successfully`,
       });
+
+      queryClient.invalidateQueries({ queryKey: ['/api/users'] });
 
       setClubName('');
       setClubId('');
