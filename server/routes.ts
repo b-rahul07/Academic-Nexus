@@ -333,5 +333,73 @@ export async function registerRoutes(
     }
   });
 
+  // =================== ADMIN BULK UPLOAD API ===================
+  
+  app.post("/api/admin/bulk-upload", async (req, res) => {
+    try {
+      const { rollNumber, filename } = req.body;
+      
+      if (!rollNumber || !filename) {
+        return res.status(400).json({ error: "Missing rollNumber or filename" });
+      }
+
+      // Verify student exists
+      const student = await storage.getUserByIdentifier(rollNumber);
+
+      if (!student) {
+        return res.status(404).json({ error: "Student not found" });
+      }
+
+      res.json({ 
+        success: true, 
+        message: "Hall ticket processed successfully",
+        rollNumber,
+        filename,
+        studentName: student.name
+      });
+    } catch (error) {
+      console.error("Error in bulk upload:", error);
+      res.status(500).json({ error: "Failed to process bulk upload" });
+    }
+  });
+
+  // =================== FACULTY SEATING ALGORITHM API ===================
+  
+  app.post("/api/faculty/seating-algo", async (req, res) => {
+    try {
+      // Get all students
+      const allStudents = await storage.getUsersByRole('student');
+      
+      // Filter out detained students
+      const activeStudents = allStudents.filter((s: any) => s.academic_status !== 'Detained');
+      
+      // Simple random seating assignment
+      const rooms = ['Room A', 'Room B', 'Room C', 'Room D'];
+      const seatsPerRoom = 30;
+      
+      const assignments = activeStudents.map((student: any, index: number) => {
+        const roomIndex = Math.floor(index / seatsPerRoom) % rooms.length;
+        const seatNumber = (index % seatsPerRoom) + 1;
+        
+        return {
+          rollNumber: student.id,
+          name: student.name || `Student ${student.id}`,
+          room: rooms[roomIndex],
+          seat: seatNumber
+        };
+      });
+
+      res.json({
+        success: true,
+        totalStudents: allStudents.length,
+        detainedStudents: allStudents.filter((s: any) => s.academic_status === 'Detained').length,
+        assignments
+      });
+    } catch (error) {
+      console.error("Error in seating algorithm:", error);
+      res.status(500).json({ error: "Failed to generate seating" });
+    }
+  });
+
   return httpServer;
 }

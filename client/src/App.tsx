@@ -1,4 +1,5 @@
 import { Switch, Route, Redirect, useLocation } from "wouter";
+import { useEffect } from "react";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -10,12 +11,15 @@ import Login from "@/pages/Login";
 import ChangePassword from "@/pages/ChangePassword";
 import NotFound from "@/pages/not-found";
 import { CardNavItem } from "@/components/CardNav";
+import { supabase } from "@/supabaseClient";
 
 // Placeholder Pages
 import StudentDashboard from "@/pages/student/Dashboard";
 import AdminDashboard from "@/pages/admin/Dashboard";
 import SeatingDashboard from "@/pages/seating/Dashboard";
 import ClubDashboard from "@/pages/club/Dashboard";
+import BulkUpload from "@/pages/admin/BulkUpload";
+import SeatingAlgorithm from "@/pages/faculty/SeatingAlgorithm";
 
 interface CurrentUser {
   id: string;
@@ -211,7 +215,10 @@ function Router() {
         {currentUser ? (
           <ProtectedRoute requiredRole="faculty">
             <MainLayout user={currentUser} navItems={getNavItemsForRole('faculty')}>
-              <AdminDashboard />
+              <Switch>
+                <Route path="/seating-algo" component={SeatingAlgorithm} />
+                <Route component={SeatingDashboard} />
+              </Switch>
             </MainLayout>
           </ProtectedRoute>
         ) : (
@@ -224,7 +231,10 @@ function Router() {
         {currentUser ? (
           <ProtectedRoute requiredRole="admin">
             <MainLayout user={currentUser} navItems={getNavItemsForRole('admin')}>
-              <AdminDashboard />
+              <Switch>
+                <Route path="/bulk-upload" component={BulkUpload} />
+                <Route component={AdminDashboard} />
+              </Switch>
             </MainLayout>
           </ProtectedRoute>
         ) : (
@@ -245,6 +255,28 @@ function Router() {
 function App() {
   const currentUserJson = typeof window !== 'undefined' ? localStorage.getItem('currentUser') : null;
   const currentUser = currentUserJson ? JSON.parse(currentUserJson) : null;
+
+  // Test Supabase connection
+  useEffect(() => {
+    const testConnection = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('users')
+          .select('count')
+          .single();
+        
+        if (error) {
+          console.warn('⚠️ Supabase connection warning:', error.message);
+        } else {
+          console.log('✅ Connected to Supabase');
+        }
+      } catch (err) {
+        console.warn('⚠️ Supabase connection test failed:', err);
+      }
+    };
+
+    testConnection();
+  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>
