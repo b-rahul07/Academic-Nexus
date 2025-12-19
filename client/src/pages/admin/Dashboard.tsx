@@ -13,14 +13,8 @@ import { TicketVerifier } from '@/components/TicketVerifier';
 import { UserManagement } from './UserManagement';
 import { motion } from 'framer-motion';
 
-const data = [
-  { name: 'Jan', events: 4, exams: 2 },
-  { name: 'Feb', events: 3, exams: 1 },
-  { name: 'Mar', events: 2, exams: 5 },
-  { name: 'Apr', events: 6, exams: 3 },
-  { name: 'May', events: 8, exams: 8 },
-  { name: 'Jun', events: 5, exams: 2 },
-];
+// Chart data - will be fetched from database in future
+const data: { name: string; events: number; exams: number }[] = [];
 
 export default function AdminDashboard() {
   const { examMode, isLoading: examModeLoading, toggleExamMode: toggleExamModeApi } = useExamMode();
@@ -69,12 +63,12 @@ export default function AdminDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Total Students</p>
-                <h3 className="text-2xl font-bold">2,845</h3>
+                <h3 className="text-2xl font-bold">0</h3>
               </div>
               <div className="p-3 bg-primary/10 rounded-lg text-primary"><Users className="w-5 h-5" /></div>
             </div>
-            <div className="mt-4 flex items-center text-xs text-green-500">
-              <TrendingUp className="w-3 h-3 mr-1" /> +12% from last year
+            <div className="mt-4 flex items-center text-xs text-muted-foreground">
+              <span>Fetching from database...</span>
             </div>
           </CardContent>
         </Card>
@@ -111,12 +105,12 @@ export default function AdminDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Upcoming Exams</p>
-                <h3 className="text-2xl font-bold">8</h3>
+                <h3 className="text-2xl font-bold">0</h3>
               </div>
               <div className="p-3 bg-purple-500/10 rounded-lg text-purple-500"><FileText className="w-5 h-5" /></div>
             </div>
              <div className="mt-4 text-xs text-muted-foreground">
-              Next exam in 3 days
+              Check exam schedule
             </div>
           </CardContent>
         </Card>
@@ -186,23 +180,9 @@ export default function AdminDashboard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {[
-                { user: 'Sarah Connor', action: 'Approved Robotics Event', time: '2 mins ago', icon: CheckCircle, color: 'text-emerald-500' },
-                { user: 'System', action: 'Generated Hall Tickets (Batch 2025)', time: '1 hour ago', icon: ShieldCheck, color: 'text-primary' },
-                { user: 'John Doe', action: 'Requested Room 302', time: '3 hours ago', icon: Calendar, color: 'text-orange-500' },
-                { user: 'Admin', action: 'Updated Exam Schedule', time: '5 hours ago', icon: FileText, color: 'text-blue-500' },
-              ].map((item, i) => (
-                <div key={i} className="flex items-center gap-4 p-3 rounded-lg bg-white/5 border border-white/5">
-                  <div className={`p-2 rounded-full bg-white/5 ${item.color}`}>
-                    <item.icon className="w-4 h-4" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">{item.action}</p>
-                    <p className="text-xs text-muted-foreground">by {item.user}</p>
-                  </div>
-                  <div className="text-xs text-muted-foreground">{item.time}</div>
-                </div>
-              ))}
+              <div className="flex items-center justify-center p-8 text-center text-muted-foreground">
+                <p className="text-sm">No activity logs available. Activities will appear here when users interact with the system.</p>
+              </div>
             </div>
           </CardContent>
         </Card>

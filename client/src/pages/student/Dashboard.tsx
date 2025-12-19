@@ -237,8 +237,8 @@ export default function StudentDashboard() {
 
       <div className="flex flex-col md:flex-row justify-between items-end gap-4">
         <div>
-          <h1 className="text-3xl font-bold mb-1">Welcome back, Alex</h1>
-          <p className="text-muted-foreground">Here's your academic overview for today.</p>
+          <h1 className="text-3xl font-bold mb-1">Student Dashboard</h1>
+          <p className="text-muted-foreground">Your academic information will appear here.</p>
         </div>
         <div className="flex gap-2 w-full md:w-auto">
            <Dialog>
@@ -283,28 +283,8 @@ export default function StudentDashboard() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {[
-                  { time: '09:00 AM', subject: 'Advanced Algorithms', room: 'Lab 3', status: 'In Progress' },
-                  { time: '11:00 AM', subject: 'Software Engineering', room: 'Room 204', status: 'Upcoming' },
-                  { time: '02:00 PM', subject: 'Machine Learning', room: 'Lab 1', status: 'Upcoming' },
-                ].map((item, i) => (
-                  <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-white/5 border border-white/5 hover:bg-white/10 transition-colors" data-testid={`schedule-item-${i}`}>
-                    <div className="flex items-center gap-4">
-                      <div className="text-sm font-mono text-muted-foreground">{item.time}</div>
-                      <div className="w-px h-8 bg-border" />
-                      <div>
-                        <p className="font-medium">{item.subject}</p>
-                        <p className="text-xs text-muted-foreground flex items-center gap-1">
-                          <MapPin className="w-3 h-3" /> {item.room}
-                        </p>
-                      </div>
-                    </div>
-                    <Badge variant={item.status === 'In Progress' ? 'default' : 'secondary'} className={item.status === 'In Progress' ? 'bg-primary text-primary-foreground' : ''}>
-                      {item.status}
-                    </Badge>
-                  </div>
-                ))}
+              <div className="flex items-center justify-center p-8 text-center">
+                <p className="text-muted-foreground text-sm">No classes scheduled for today. Check back later.</p>
               </div>
             </CardContent>
           </Card>
@@ -325,27 +305,9 @@ export default function StudentDashboard() {
                 <Trophy className="w-5 h-5 text-yellow-500" /> Progress
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span>Attendance</span>
-                  <span className="font-bold text-emerald-500">92%</span>
-                </div>
-                <Progress value={92} className="h-2 bg-white/5" indicatorClassName="bg-emerald-500"/>
-              </div>
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span>Assignments</span>
-                  <span className="font-bold text-primary">85%</span>
-                </div>
-                <Progress value={85} className="h-2 bg-white/5" />
-              </div>
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span>CGPA</span>
-                  <span className="font-bold text-purple-500">3.8</span>
-                </div>
-                <Progress value={88} className="h-2 bg-white/5" indicatorClassName="bg-purple-500"/>
+            <CardContent>
+              <div className="flex items-center justify-center p-8 text-center">
+                <p className="text-muted-foreground text-sm">Your academic progress will appear here once you are enrolled.</p>
               </div>
             </CardContent>
           </Card>
