@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { GraduationCap, Shield, Users, PartyPopper, Lock, ArrowRight } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
 import bgImage from '@assets/generated_images/abstract_executive_dark_background_with_glassmorphism_elements.png';
 import logo from '@assets/generated_images/minimalist_academic_university_logo_emblem.png';
 
@@ -44,27 +45,33 @@ export default function Login() {
 
     setLoading(true);
     try {
-      const response = await fetch('/api/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          id: identifier,
-          password,
-          role: selectedRole,
-        }),
-      });
+      const { data: users, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', identifier)
+        .eq('role', selectedRole);
 
-      if (!response.ok) {
-        const error = await response.json();
+      if (error) {
+        console.error('Supabase query error:', error);
         toast({
           title: "Error",
-          description: error.error || "Login failed",
+          description: error?.message || "Database query failed",
           variant: "destructive",
         });
         return;
       }
 
-      const user = await response.json();
+      const user = users?.find((u: any) => u.password === password);
+
+      if (!user) {
+        toast({
+          title: "Error",
+          description: "Invalid Credentials",
+          variant: "destructive",
+        });
+        return;
+      }
+
       localStorage.setItem('currentUser', JSON.stringify(user));
 
       toast({

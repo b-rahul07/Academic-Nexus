@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/lib/supabase';
 import { Plus, Loader2 } from 'lucide-react';
 
 export function UserManagement() {
@@ -49,22 +50,19 @@ export function UserManagement() {
     setStudentLoading(true);
     try {
       const password = dobToPassword(studentDob);
-      const response = await fetch('/api/users', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+      const { error } = await supabase
+        .from('users')
+        .insert({
           id: studentRollNo,
           password,
           role: 'student',
           name: studentName,
           department: studentDepartment,
           year: parseInt(studentYear),
-        }),
-      });
+        });
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Failed to create student");
+      if (error) {
+        throw error;
       }
 
       toast({
@@ -104,21 +102,18 @@ export function UserManagement() {
     setSeatingLoading(true);
     try {
       const password = dobToPassword(seatingDob);
-      const response = await fetch('/api/users', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+      const { error } = await supabase
+        .from('users')
+        .insert({
           id: seatingId,
           password,
           role: 'seating_manager',
           name: seatingName,
           designation: seatingDesignation,
-        }),
-      });
+        });
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Failed to create seating manager");
+      if (error) {
+        throw error;
       }
 
       toast({
@@ -157,21 +152,18 @@ export function UserManagement() {
     setClubLoading(true);
     try {
       const password = dobToPassword(clubDob);
-      const response = await fetch('/api/users', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+      const { error } = await supabase
+        .from('users')
+        .insert({
           id: clubId,
           password,
           role: 'club_coordinator',
           name: clubName,
           club_name: clubClubName,
-        }),
-      });
+        });
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Failed to create club coordinator");
+      if (error) {
+        throw error;
       }
 
       toast({
