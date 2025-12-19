@@ -1,15 +1,29 @@
 import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/lib/supabase';
-import { Plus, Loader2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { Plus, Loader2, AlertCircle } from 'lucide-react';
+
+interface User {
+  id: string;
+  name: string;
+  role: 'student' | 'faculty' | 'admin';
+  academic_status?: 'active' | 'detained';
+  additional_roles?: string[];
+}
 
 export function UserManagement() {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const [studentName, setStudentName] = useState('');
   const [studentRollNo, setStudentRollNo] = useState('');
@@ -29,6 +43,57 @@ export function UserManagement() {
   const [clubClubName, setClubClubName] = useState('');
   const [clubDob, setClubDob] = useState('');
   const [clubLoading, setClubLoading] = useState(false);
+
+  // Fetch all users
+  const { data: users = [], isLoading: usersLoading, error } = useQuery({
+    queryKey: ['/api/users'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('users').select('*');
+      if (error) throw error;
+      return data as User[];
+    },
+  });
+
+  // Update academic status mutation
+  const updateStatusMutation = useMutation({
+    mutationFn: async ({ userId, status }: { userId: string; status: string }) => {
+      const { error } = await supabase
+        .from('users')
+        .update({ academic_status: status })
+        .eq('id', userId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/users'] });
+      toast({ title: 'Success', description: 'User status updated' });
+    },
+    onError: (error: any) => {
+      toast({ title: 'Error', description: error.message || 'Failed to update status', variant: 'destructive' });
+    },
+  });
+
+  // Toggle duty mutation
+  const toggleDutyMutation = useMutation({
+    mutationFn: async ({ userId, duty }: { userId: string; duty: string }) => {
+      const user = users.find(u => u.id === userId);
+      const currentRoles = user?.additional_roles || [];
+      const newRoles = currentRoles.includes(duty)
+        ? currentRoles.filter(r => r !== duty)
+        : [...currentRoles, duty];
+      const { error } = await supabase
+        .from('users')
+        .update({ additional_roles: newRoles })
+        .eq('id', userId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/users'] });
+      toast({ title: 'Success', description: 'User duty updated' });
+    },
+    onError: (error: any) => {
+      toast({ title: 'Error', description: error.message || 'Failed to update duty', variant: 'destructive' });
+    },
+  });
 
   const dobToPassword = (dob: string) => {
     const [year, month, day] = dob.split('-');
@@ -194,12 +259,125 @@ export function UserManagement() {
         <p className="text-muted-foreground">Create and manage system users</p>
       </div>
 
-      <Tabs defaultValue="students" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="students">Students</TabsTrigger>
-          <TabsTrigger value="seating">Seating Managers</TabsTrigger>
-          <TabsTrigger value="club">Club Coordinators</TabsTrigger>
+      <Tabs defaultValue="users" className="w-full">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="users">User List</TabsTrigger>
+          <TabsTrigger value="students">Add Student</TabsTrigger>
+          <TabsTrigger value="seating">Add Faculty</TabsTrigger>
+          <TabsTrigger value="club">Add Coordinator</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="users" className="space-y-4">
+          {error && (
+            <Card className="border-red-500/20 bg-red-500/5">
+              <CardContent className="pt-6 flex items-center gap-2 text-red-600">
+                <AlertCircle className="w-5 h-5" />
+                <span>Failed to load users. Please refresh the page.</span>
+              </CardContent>
+            </Card>
+          )}
+          {usersLoading ? (
+            <Card>
+              <CardContent className="pt-6 space-y-3">
+                {[...Array(5)].map((_, i) => (
+                  <Skeleton key={i} className="h-12 w-full" />
+                ))}
+              </CardContent>
+            </Card>
+          ) : (
+            <Card>
+              <CardHeader>
+                <CardTitle>All Users</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-border">
+                        <th className="text-left py-3 px-4 font-semibold">Name</th>
+                        <th className="text-left py-3 px-4 font-semibold">Role</th>
+                        <th className="text-left py-3 px-4 font-semibold">ID</th>
+                        <th className="text-left py-3 px-4 font-semibold">Status</th>
+                        <th className="text-left py-3 px-4 font-semibold">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {users.map((user) => {
+                        const isDetained = user.academic_status === 'detained';
+                        const hasSeatingManager = user.additional_roles?.includes('seating_manager');
+                        const hasClubCoordinator = user.additional_roles?.includes('club_coordinator');
+                        return (
+                          <tr key={user.id} className={cn('border-b border-border transition-colors', isDetained && 'bg-red-500/5')}>
+                            <td className="py-3 px-4">{user.name}</td>
+                            <td className="py-3 px-4"><Badge variant="outline" className="capitalize">{user.role}</Badge></td>
+                            <td className="py-3 px-4 font-mono text-xs">{user.id}</td>
+                            <td className="py-3 px-4">
+                              {user.role === 'student' ? (
+                                <div className="flex items-center gap-2">
+                                  <Switch
+                                    checked={isDetained}
+                                    onCheckedChange={(checked) => {
+                                      updateStatusMutation.mutate({
+                                        userId: user.id,
+                                        status: checked ? 'detained' : 'active',
+                                      });
+                                    }}
+                                    disabled={updateStatusMutation.isPending}
+                                    data-testid={`toggle-status-${user.id}`}
+                                  />
+                                  <span className="text-xs">{isDetained ? 'Detained' : 'Active'}</span>
+                                </div>
+                              ) : (
+                                <Badge variant="secondary">Active</Badge>
+                              )}
+                            </td>
+                            <td className="py-3 px-4">
+                              {user.role === 'faculty' && (
+                                <Button
+                                  size="sm"
+                                  variant={hasSeatingManager ? 'default' : 'outline'}
+                                  onClick={() => {
+                                    toggleDutyMutation.mutate({
+                                      userId: user.id,
+                                      duty: 'seating_manager',
+                                    });
+                                  }}
+                                  disabled={toggleDutyMutation.isPending}
+                                  data-testid={`toggle-seating-${user.id}`}
+                                >
+                                  {hasSeatingManager ? 'Remove' : 'Add'} Seating
+                                </Button>
+                              )}
+                              {user.role === 'student' && (
+                                <Button
+                                  size="sm"
+                                  variant={hasClubCoordinator ? 'default' : 'outline'}
+                                  onClick={() => {
+                                    toggleDutyMutation.mutate({
+                                      userId: user.id,
+                                      duty: 'club_coordinator',
+                                    });
+                                  }}
+                                  disabled={toggleDutyMutation.isPending}
+                                  data-testid={`toggle-club-${user.id}`}
+                                >
+                                  {hasClubCoordinator ? 'Remove' : 'Add'} Club
+                                </Button>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                  {users.length === 0 && (
+                    <div className="text-center py-8 text-muted-foreground">No users found</div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
 
         <TabsContent value="students" className="space-y-4">
           <Card className="glass-card">
