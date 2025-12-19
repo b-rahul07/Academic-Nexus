@@ -1,0 +1,120 @@
+.card-nav-container {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 1000;
+}
+
+.card-nav {
+  background: rgba(15, 23, 42, 0.8);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 12px;
+  padding: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  transition: all 0.3s ease;
+}
+
+.card-nav.open {
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+}
+
+.card-nav-hamburger {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border-radius: 8px;
+  background: rgba(100, 116, 139, 0.2);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  transition: all 0.2s ease;
+  color: #cbd5e1;
+}
+
+.card-nav-hamburger:hover {
+  background: rgba(100, 116, 139, 0.3);
+  color: #f1f5f9;
+}
+
+.card-nav-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.nav-card {
+  background: linear-gradient(135deg, rgba(51, 65, 85, 0.5), rgba(30, 41, 59, 0.5));
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 8px;
+  padding: 12px;
+  min-width: 200px;
+}
+
+.nav-card-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #e2e8f0;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.nav-card-links {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.nav-link {
+  padding: 8px 12px;
+  border-radius: 6px;
+  background: rgba(100, 116, 139, 0.1);
+  border: 1px solid rgba(148, 163, 184, 0.1);
+  color: #cbd5e1;
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.nav-link:hover {
+  background: rgba(148, 163, 184, 0.2);
+  color: #f1f5f9;
+  border-color: rgba(148, 163, 184, 0.3);
+  transform: translateX(2px);
+}
+
+.nav-link-arrow {
+  width: 14px;
+  height: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (max-width: 768px) {
+  .card-nav-container {
+    top: 10px;
+    left: 10px;
+  }
+
+  .nav-card {
+    min-width: 160px;
+  }
+
+  .nav-card-title {
+    font-size: 12px;
+  }
+
+  .nav-link {
+    font-size: 11px;
+    padding: 6px 10px;
+  }
+}

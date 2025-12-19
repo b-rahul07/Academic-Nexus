@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { AppProvider } from "@/context/AppContext";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { CardNav } from "@/components/CardNav";
 import Login from "@/pages/Login";
 import ChangePassword from "@/pages/ChangePassword";
 import NotFound from "@/pages/not-found";
@@ -20,6 +21,75 @@ interface CurrentUser {
   role: string;
   name?: string;
 }
+
+interface NavCard {
+  title: string;
+  items: { label: string; href: string }[];
+}
+
+const getNavItems = (role?: string): NavCard[] => {
+  if (!role) return [];
+
+  switch (role) {
+    case 'admin':
+      return [
+        {
+          title: 'Users',
+          items: [
+            { label: 'Add Student', href: '/admin/dashboard?tab=students' },
+            { label: 'Manage Faculty', href: '/admin/dashboard?tab=seating' },
+            { label: 'Club Coordinators', href: '/admin/dashboard?tab=club' },
+          ],
+        },
+        {
+          title: 'Exams',
+          items: [
+            { label: 'Seating Allocation', href: '/admin/dashboard?tab=seating-alloc' },
+            { label: 'Hall Tickets', href: '/admin/dashboard?tab=tickets' },
+          ],
+        },
+      ];
+    case 'student':
+      return [
+        {
+          title: 'Academics',
+          items: [
+            { label: 'Dashboard', href: '/student/dashboard' },
+            { label: 'Study Support', href: '/student/dashboard?tab=study' },
+          ],
+        },
+        {
+          title: 'Exams',
+          items: [
+            { label: 'Hall Ticket', href: '/student/dashboard?tab=ticket' },
+            { label: 'Seating Info', href: '/student/dashboard?tab=seating' },
+          ],
+        },
+      ];
+    case 'seating_manager':
+      return [
+        {
+          title: 'Allocation',
+          items: [
+            { label: 'Generate Seating', href: '/seating/dashboard' },
+            { label: 'View Rooms', href: '/seating/dashboard?tab=rooms' },
+          ],
+        },
+      ];
+    case 'club_coordinator':
+      return [
+        {
+          title: 'Events',
+          items: [
+            { label: 'Dashboard', href: '/club/dashboard' },
+            { label: 'Manage Events', href: '/club/dashboard?tab=events' },
+          ],
+        },
+      ];
+    default:
+      return [];
+  }
+};
 
 function ProtectedRoute({ component: Component, requiredRole }: { component: any, requiredRole: string }) {
   const currentUserJson = localStorage.getItem('currentUser');
@@ -88,10 +158,14 @@ function Router() {
 }
 
 function App() {
+  const currentUserJson = typeof window !== 'undefined' ? localStorage.getItem('currentUser') : null;
+  const currentUser = currentUserJson ? JSON.parse(currentUserJson) : null;
+
   return (
     <QueryClientProvider client={queryClient}>
       <AppProvider>
         <ErrorBoundary>
+          {currentUser && <CardNav items={getNavItems(currentUser.role)} />}
           <AppLayout>
             <Router />
           </AppLayout>
