@@ -46,15 +46,26 @@ export default function Login() {
     setLoading(true);
     try {
       // Query Supabase users table directly
-      const { data, error } = await supabase
+      const { data: users, error } = await supabase
         .from('users')
         .select('*')
         .eq('id', identifier)
-        .eq('password', password)
-        .eq('role', selectedRole)
-        .single();
+        .eq('role', selectedRole);
 
-      if (error || !data) {
+      if (error) {
+        console.error('Supabase query error:', error);
+        toast({
+          title: "Error",
+          description: "Database query failed",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Find user with matching password
+      const user = users?.find((u: any) => u.password === password);
+
+      if (!user) {
         toast({
           title: "Error",
           description: "Invalid Credentials",
@@ -64,11 +75,11 @@ export default function Login() {
       }
 
       // Save to localStorage
-      localStorage.setItem('currentUser', JSON.stringify(data));
+      localStorage.setItem('currentUser', JSON.stringify(user));
 
       toast({
         title: "Success",
-        description: `Logged in as ${data.id}`,
+        description: `Logged in as ${user.id}`,
       });
 
       // Redirect based on role
@@ -78,7 +89,7 @@ export default function Login() {
         'seating_manager': '/seating/dashboard',
         'club_coordinator': '/club/dashboard',
       };
-      setLocation(roleMap[data.role] || '/');
+      setLocation(roleMap[user.role] || '/');
     } catch (error) {
       toast({
         title: "Error",
