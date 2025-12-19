@@ -5,7 +5,7 @@ import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { GraduationCap, Shield, Users, PartyPopper, Lock, ArrowRight } from 'lucide-react';
+import { GraduationCap, Briefcase, Shield, Lock, ArrowRight, Users } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import bgImage from '@assets/generated_images/abstract_executive_dark_background_with_glassmorphism_elements.png';
 import logo from '@assets/generated_images/minimalist_academic_university_logo_emblem.png';
@@ -20,10 +20,9 @@ export default function Login() {
   const [selectedRole, setSelectedRole] = useState<string | null>(null);
 
   const roles = [
-    { id: 'student', label: 'Student Portal', icon: GraduationCap, path: '/student/dashboard', color: 'from-blue-500 to-cyan-500' },
-    { id: 'admin', label: 'Administrator', icon: Shield, path: '/admin/dashboard', color: 'from-purple-500 to-pink-500' },
-    { id: 'seating_manager', label: 'Seating Manager', icon: Users, path: '/seating/dashboard', color: 'from-emerald-500 to-teal-500' },
-    { id: 'club_coordinator', label: 'Club Coordinator', icon: PartyPopper, path: '/club/dashboard', color: 'from-orange-500 to-red-500' },
+    { id: 'student', label: 'Student', icon: GraduationCap, path: '/student/dashboard', color: 'from-blue-500 to-cyan-500' },
+    { id: 'faculty', label: 'Faculty', icon: Briefcase, path: '/faculty/dashboard', color: 'from-emerald-500 to-teal-500' },
+    { id: 'admin', label: 'Admin', icon: Shield, path: '/admin/dashboard', color: 'from-purple-500 to-pink-500' },
   ];
 
   const handleRoleSelect = (role: string) => {
@@ -82,8 +81,7 @@ export default function Login() {
       const roleMap: Record<string, string> = {
         'student': '/student/dashboard',
         'admin': '/admin/dashboard',
-        'seating_manager': '/seating/dashboard',
-        'club_coordinator': '/club/dashboard',
+        'faculty': '/faculty/dashboard',
       };
       setLocation(roleMap[user.role] || '/');
     } catch (error) {
@@ -103,8 +101,7 @@ export default function Login() {
     const identifierLabels: Record<string, { label: string; placeholder: string }> = {
       'admin': { label: 'Admin ID', placeholder: 'Enter your admin ID' },
       'student': { label: 'Roll Number', placeholder: 'e.g., R101' },
-      'seating_manager': { label: 'Faculty ID', placeholder: 'e.g., FAC001' },
-      'club_coordinator': { label: 'Student ID', placeholder: 'e.g., SID001' },
+      'faculty': { label: 'Faculty ID', placeholder: 'e.g., FAC001' },
     };
 
     const roleInfo = identifierLabels[selectedRole] || identifierLabels['student'];
@@ -216,33 +213,29 @@ export default function Login() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {roles.map((role) => (
             <button
               key={role.id}
               onClick={() => handleRoleSelect(role.id)}
-              className="group relative overflow-hidden rounded-2xl border border-purple-500/30 bg-white/10 backdrop-blur-md p-4 transition-all hover:bg-white/20 hover:border-purple-400/60 hover:shadow-[0_0_30px_rgba(168,85,247,0.4)] text-left"
+              className="group relative overflow-hidden rounded-2xl border border-purple-500/30 bg-white/10 backdrop-blur-md p-6 transition-all hover:bg-white/20 hover:border-purple-400/60 hover:shadow-[0_0_30px_rgba(168,85,247,0.4)]"
               disabled={loading}
               data-testid={`button-login-role-${role.id}`}
             >
-              <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-purple-500 via-cyan-500 to-purple-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 via-transparent to-cyan-500/10 opacity-0 group-hover:opacity-100 transition-opacity" />
               
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="p-3 rounded-xl bg-gradient-to-br from-purple-500/20 to-cyan-500/20 text-purple-400 shadow-inner">
-                    <role.icon className="w-6 h-6" />
-                  </div>
-                  <div>
-                    <h3 className="font-display font-bold text-lg text-white group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-purple-400 group-hover:to-cyan-400 transition-all">
-                      {role.label}
-                    </h3>
-                    <p className="text-sm text-gray-400 group-hover:text-cyan-300 transition-colors">
-                      Access dashboard
-                    </p>
-                  </div>
+              <div className="relative z-10 flex flex-col items-center justify-center text-center space-y-3">
+                <div className="p-4 rounded-xl bg-gradient-to-br from-purple-500/20 to-cyan-500/20 text-purple-400 shadow-inner group-hover:shadow-[0_0_20px_rgba(168,85,247,0.5)] transition-shadow">
+                  <role.icon className="w-8 h-8" />
                 </div>
-                
-                <ArrowRight className="w-5 h-5 text-purple-400 transition-all group-hover:translate-x-1 group-hover:drop-shadow-[0_0_8px_rgba(168,85,247,0.8)]" />
+                <div>
+                  <h3 className="font-display font-bold text-lg text-white group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-purple-400 group-hover:to-cyan-400 transition-all">
+                    {role.label}
+                  </h3>
+                  <p className="text-xs text-gray-400 group-hover:text-cyan-300 transition-colors mt-1">
+                    Login portal
+                  </p>
+                </div>
               </div>
             </button>
           ))}
