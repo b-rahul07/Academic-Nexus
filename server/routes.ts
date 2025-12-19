@@ -12,69 +12,8 @@ export async function registerRoutes(
 ): Promise<Server> {
   
   // =================== AUTH API ===================
-  
-  app.post("/api/auth/login", async (req, res) => {
-    try {
-      const { identifier, password } = req.body;
-      
-      if (!identifier || !password) {
-        return res.status(400).json({ error: "Identifier and password are required" });
-      }
-
-      const user = await storage.getUserByIdentifier(identifier);
-      
-      if (!user) {
-        return res.status(401).json({ error: "Invalid credentials" });
-      }
-
-      // Direct string comparison - no hashing
-      if (user.password_hash !== password) {
-        return res.status(401).json({ error: "Invalid credentials" });
-      }
-
-      res.json({
-        id: user.id,
-        role: user.role,
-        identifier: user.identifier,
-        is_first_login: user.is_first_login,
-      });
-    } catch (error) {
-      console.error("Error logging in:", error);
-      res.status(500).json({ error: "Failed to login" });
-    }
-  });
-
-  app.post("/api/auth/change-password", async (req, res) => {
-    try {
-      const { userId, newPassword } = req.body;
-      
-      if (!userId || !newPassword) {
-        return res.status(400).json({ error: "userId and newPassword are required" });
-      }
-
-      const user = await storage.getUser(userId);
-      
-      if (!user) {
-        return res.status(404).json({ error: "User not found" });
-      }
-
-      // Store password as-is, no hashing
-      const updatedUser = await storage.updateUser(userId, {
-        password_hash: newPassword,
-        is_first_login: false,
-      });
-
-      res.json({
-        id: updatedUser?.id,
-        role: updatedUser?.role,
-        identifier: updatedUser?.identifier,
-        is_first_login: updatedUser?.is_first_login,
-      });
-    } catch (error) {
-      console.error("Error changing password:", error);
-      res.status(500).json({ error: "Failed to change password" });
-    }
-  });
+  // NOTE: Authentication is handled via Supabase directly on the frontend
+  // No backend auth endpoints needed
 
   // =================== EVENTS API ===================
   
