@@ -1,6 +1,7 @@
 import { useLayoutEffect, useRef, useState } from 'react';
 import { gsap } from 'gsap';
 import { GoArrowUpRight } from 'react-icons/go';
+import { LogOut } from 'lucide-react';
 import { useLocation } from 'wouter';
 import './CardNav.css';
 
@@ -105,6 +106,11 @@ export const CardNav = ({ items, className = '' }: CardNavProps) => {
     toggleMenu();
   };
 
+  const handleLogout = () => {
+    localStorage.clear();
+    window.location.reload();
+  };
+
   return (
     <div className={`card-nav-container ${className}`}>
       <nav
@@ -128,6 +134,14 @@ export const CardNav = ({ items, className = '' }: CardNavProps) => {
               )}
             </svg>
           </div>
+          <button 
+            onClick={handleLogout}
+            className="card-nav-logout"
+            data-testid="button-logout"
+            title="Logout"
+          >
+            <LogOut className="w-5 h-5" />
+          </button>
         </div>
 
         <div className="card-nav-content">

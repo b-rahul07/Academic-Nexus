@@ -45,7 +45,7 @@
   height: 20px;
 }
 
-/* Top bar containing hamburger */
+/* Top bar containing hamburger and logout */
 .card-nav-top {
   height: 60px;
   display: flex;
@@ -53,6 +53,27 @@
   justify-content: space-between;
   padding: 0 1.5rem;
   border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+}
+
+.card-nav-logout {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border-radius: 8px;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  transition: all 0.2s ease;
+  color: #dc2626;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.card-nav-logout:hover {
+  background: rgba(239, 68, 68, 0.2);
+  color: #b91c1c;
 }
 
 .card-nav-content {

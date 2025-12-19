@@ -6,86 +6,129 @@ interface NavCard {
   items: { label: string; href: string }[];
 }
 
-interface MainLayoutProps {
-  children: React.ReactNode;
-  userRole?: string;
+interface CurrentUser {
+  id: string;
+  role: 'student' | 'faculty' | 'admin';
+  name?: string;
+  additional_roles?: string[];
 }
 
-const getNavItems = (role?: string): NavCard[] => {
-  if (!role) return [];
+interface MainLayoutProps {
+  children: React.ReactNode;
+  user: CurrentUser;
+}
 
-  switch (role) {
-    case 'admin':
-      return [
-        {
-          title: 'Users',
-          items: [
-            { label: 'Add Student', href: '/admin/dashboard?tab=students' },
-            { label: 'Manage Faculty', href: '/admin/dashboard?tab=seating' },
-            { label: 'Club Coordinators', href: '/admin/dashboard?tab=club' },
-          ],
-        },
-        {
-          title: 'Exams',
-          items: [
-            { label: 'Seating Allocation', href: '/admin/dashboard?tab=seating-alloc' },
-            { label: 'Hall Tickets', href: '/admin/dashboard?tab=tickets' },
-          ],
-        },
-      ];
+const getNavItems = (user: CurrentUser): NavCard[] => {
+  if (!user) return [];
+
+  const additionalRoles = user.additional_roles || [];
+
+  switch (user.role) {
     case 'student':
       return [
         {
           title: 'Academics',
           items: [
-            { label: 'Dashboard', href: '/student/dashboard' },
-            { label: 'Study Support', href: '/student/dashboard?tab=study' },
+            { label: 'Mind Map', href: '/student/mindmap' },
+            { label: 'Results', href: '/student/results' },
           ],
         },
         {
           title: 'Exams',
           items: [
-            { label: 'Hall Ticket', href: '/student/dashboard?tab=ticket' },
-            { label: 'Seating Info', href: '/student/dashboard?tab=seating' },
+            { label: 'Hall Ticket', href: '/student/ticket' },
+            { label: 'Seating Plan', href: '/student/seating' },
           ],
         },
+        {
+          title: 'Extra',
+          items: additionalRoles.includes('club_coordinator')
+            ? [{ label: 'Manage Club Events', href: '/student/events' }]
+            : [{ label: 'Campus Events', href: '/student/events' }],
+        },
       ];
-    case 'seating_manager':
+
+    case 'faculty':
       return [
         {
-          title: 'Allocation',
+          title: 'Classroom',
           items: [
-            { label: 'Generate Seating', href: '/seating/dashboard' },
-            { label: 'View Rooms', href: '/seating/dashboard?tab=rooms' },
+            { label: 'Attendance', href: '/faculty/attendance' },
+            { label: 'My Schedule', href: '/faculty/schedule' },
+          ],
+        },
+        {
+          title: 'Profile',
+          items: additionalRoles.includes('seating_manager')
+            ? [{ label: 'Allocate Seating', href: '/faculty/seating' }]
+            : [{ label: 'Service Record', href: '/faculty/service' }],
+        },
+        {
+          title: 'Exam Duty',
+          items: [
+            { label: 'Invigilation Schedule', href: '/faculty/invigilation' },
           ],
         },
       ];
-    case 'club_coordinator':
+
+    case 'admin':
       return [
         {
-          title: 'Events',
+          title: 'People',
           items: [
-            { label: 'Dashboard', href: '/club/dashboard' },
-            { label: 'Manage Events', href: '/club/dashboard?tab=events' },
+            { label: 'Manage Students', href: '/admin/students' },
+            { label: 'Manage Faculty', href: '/admin/faculty' },
+            { label: 'Assign Duties', href: '/admin/duties' },
+          ],
+        },
+        {
+          title: 'Exams',
+          items: [
+            { label: 'Bulk Hall Ticket Upload', href: '/admin/tickets' },
+            { label: 'Exam Schedule', href: '/admin/schedule' },
+          ],
+        },
+        {
+          title: 'System',
+          items: [
+            { label: 'Reports', href: '/admin/reports' },
+            { label: 'Settings', href: '/admin/settings' },
           ],
         },
       ];
+
     default:
       return [];
   }
 };
 
-export const MainLayout: React.FC<MainLayoutProps> = ({ children, userRole }) => {
-  const role = userRole;
-  const navItems = getNavItems(role);
+export const MainLayout: React.FC<MainLayoutProps> = ({ children, user }) => {
+  if (!user) {
+    return (
+      <div className="w-full min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-lg font-semibold">Loading...</div>
+        </div>
+      </div>
+    );
+  }
+
+  const navItems = getNavItems(user);
+  // Ensure we always have at least a default Home card
+  const itemsToDisplay = navItems.length > 0 ? navItems : [
+    {
+      title: 'Home',
+      items: [{ label: 'Dashboard', href: `/${user.role}/dashboard` }],
+    },
+  ];
 
   return (
     <div className="w-full min-h-screen">
       {/* Floating Navigation Cards */}
-      {navItems.length > 0 && <CardNav items={navItems} />}
+      <CardNav items={itemsToDisplay} />
       
       {/* Content Container - Padded so Nav doesn't overlap */}
-      <div className="pt-96 px-6 pb-12 max-w-7xl mx-auto">
+      <div className="pt-32 px-6 pb-12 max-w-7xl mx-auto">
         {children}
       </div>
     </div>
