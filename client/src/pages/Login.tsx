@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { GraduationCap, Shield, Users, PartyPopper, Lock, ArrowRight } from 'lucide-react';
-import { supabase } from '../../../lib/supabase';
+import { supabase } from '@/lib/supabase';
 import bgImage from '@assets/generated_images/abstract_executive_dark_background_with_glassmorphism_elements.png';
 import logo from '@assets/generated_images/minimalist_academic_university_logo_emblem.png';
 
